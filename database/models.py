@@ -4,6 +4,9 @@ from django.utils import timezone
 
 # Create your models here.
 class Supplier(models.Model):
+    class Meta:
+        unique_together = ('company', 'agent',)
+
     company = models.TextField(help_text="Name of the supplier")
     agent = models.TextField(blank=True, null=True, help_text="Name of the company agent")
     email = models.EmailField(blank=True, null=True, help_text="Email address of the supplier")
@@ -12,16 +15,19 @@ class Supplier(models.Model):
 
 
 class Source(models.Model):
-    name = models.TextField(help_text="Name of a country and/or city")
+    name = models.TextField(unique=True, help_text="Name of a country and/or city")
     created = models.DateTimeField(default=timezone.now, help_text="Date product was added to database")
 
 
 class Category(models.Model):
-    name = models.TextField(help_text="Name of a product category")
+    name = models.TextField(unique=True, help_text="Name of a product category")
     created = models.DateTimeField(default=timezone.now, help_text="Date product was added to database")
 
 
 class Product(models.Model):
+    class Meta:
+        unique_together = ('name', 'description', 'size', 'supplier',)
+
     name = models.TextField(help_text="Name of the product")
     description = models.TextField(blank=True, null=True, help_text="Description of the product")
     size = models.TextField(blank=True, null=True, help_text="Size of the product")
@@ -39,7 +45,7 @@ class Product(models.Model):
 # Invoice
 class Customer(models.Model):
     created = models.DateTimeField(default=timezone.now, help_text="Date customer added to database")
-    name = models.TextField(help_text="Name of the customer")
+    name = models.TextField(unique=True, help_text="Name of the customer")
     primary_phone = models.CharField(blank=True, null=True, max_length=25, help_text="Phone number of the customer")
     secondary_phone = models.CharField(blank=True, null=True, max_length=25, help_text="Phone number of the customer")
 
