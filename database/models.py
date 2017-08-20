@@ -5,10 +5,10 @@ from django.utils import timezone
 # Create your models here.
 class Supplier(models.Model):
     company = models.TextField(help_text="Name of the supplier")
-    agent = models.TextField(blank=True, help_text="Name of the company agent")
-    email = models.EmailField(blank=True, help_text="Email address of the supplier")
-    phone = models.CharField(blank=True, max_length=25, help_text="Phone number of the supplier")
-    address = models.TextField(blank=True, help_text="Address of the supplier")
+    agent = models.TextField(blank=True, null=True, help_text="Name of the company agent")
+    email = models.EmailField(blank=True, null=True, help_text="Email address of the supplier")
+    phone = models.CharField(blank=True, null=True, max_length=25, help_text="Phone number of the supplier")
+    address = models.TextField(blank=True, null=True, help_text="Address of the supplier")
 
 
 class Source(models.Model):
@@ -23,8 +23,8 @@ class Category(models.Model):
 
 class Product(models.Model):
     name = models.TextField(help_text="Name of the product")
-    description = models.TextField(blank=True, help_text="Description of the product")
-    size = models.TextField(blank=True, help_text="Size of the product")
+    description = models.TextField(blank=True, null=True, help_text="Description of the product")
+    size = models.TextField(blank=True, null=True, help_text="Size of the product")
     cost_price = models.DecimalField(default=0.0, max_digits=7, decimal_places=3, help_text="Cost price of the product")
     sell_price = models.DecimalField(default=0.0, max_digits=7, decimal_places=3, help_text="Sell price of the product")
     stock = models.IntegerField(default=0, help_text="Quantity of the product in stock")
@@ -40,8 +40,8 @@ class Product(models.Model):
 class Customer(models.Model):
     created = models.DateTimeField(default=timezone.now, help_text="Date customer added to database")
     name = models.TextField(help_text="Name of the customer")
-    primary_phone = models.CharField(blank=True, max_length=25, help_text="Phone number of the customer")
-    secondary_phone = models.CharField(blank=True, max_length=25, help_text="Phone number of the customer")
+    primary_phone = models.CharField(blank=True, null=True, max_length=25, help_text="Phone number of the customer")
+    secondary_phone = models.CharField(blank=True, null=True, max_length=25, help_text="Phone number of the customer")
 
 
 class Invoice(models.Model):
