@@ -2938,7 +2938,7 @@
       "sell_price": 0.03,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 19,
       "stock": 3768
    }
@@ -2954,7 +2954,7 @@
       "sell_price": 0.04,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 21,
       "stock": 555
    }
@@ -2970,7 +2970,7 @@
       "sell_price": 0.1,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 27,
       "stock": 100
    }
@@ -2986,7 +2986,7 @@
       "sell_price": 0.05,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 21,
       "stock": -23
    }
@@ -4042,7 +4042,7 @@
       "sell_price": 1,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 30,
       "stock": 80
    }
@@ -4058,7 +4058,7 @@
       "sell_price": 0.75,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 30,
       "stock": 60
    }
@@ -4074,7 +4074,7 @@
       "sell_price": 1,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 30,
       "stock": 59
    }
@@ -4106,7 +4106,7 @@
       "sell_price": 0.5,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 11,
       "stock": 19
    }
@@ -7306,7 +7306,7 @@
       "sell_price": 0.05,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 22,
       "stock": 200
    }
@@ -10426,7 +10426,7 @@
       "sell_price": 0.03,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 15,
       "stock": 364
    }
@@ -10442,7 +10442,7 @@
       "sell_price": 0.02,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 16,
       "stock": 208
    }
@@ -10458,7 +10458,7 @@
       "sell_price": 0.02,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 15,
       "stock": 150
    }
@@ -10474,7 +10474,7 @@
       "sell_price": 0.03,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 15,
       "stock": 550
    }
@@ -10490,7 +10490,7 @@
       "sell_price": 0.01,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 15,
       "stock": 830
    }
@@ -10506,7 +10506,7 @@
       "sell_price": 0.02,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 15,
       "stock": 175
    }
@@ -11338,7 +11338,7 @@
       "sell_price": 0.01,
       "hide_product": 0,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 16,
       "stock": 0
    }
@@ -11370,7 +11370,7 @@
       "sell_price": 0.05,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 4,
       "stock": 272
    }
@@ -11386,7 +11386,7 @@
       "sell_price": 0.1,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 21,
       "stock": 110
    }
@@ -11402,7 +11402,7 @@
       "sell_price": 0.08,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 4,
       "stock": 0
    }
@@ -11418,7 +11418,7 @@
       "sell_price": 0.05,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 19,
       "stock": 0
    }
@@ -11434,7 +11434,7 @@
       "sell_price": 0.1,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 22,
       "stock": 0
    }
@@ -11450,7 +11450,7 @@
       "sell_price": 0.1,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 4,
       "stock": 0
    }
@@ -12026,7 +12026,7 @@
       "sell_price": 0.02,
       "hide_product": 1,
       "source": 2,
-      "category": 12,
+      "category": 11,
       "supplier": 11,
       "stock": 290
    }
@@ -12314,7 +12314,7 @@
       "sell_price": 0.1,
       "hide_product": 1,
       "source": 4,
-      "category": 13,
+      "category": 12,
       "supplier": 34,
       "stock": 500
    }
@@ -12378,7 +12378,7 @@
       "sell_price": 0.05,
       "hide_product": 1,
       "source": 4,
-      "category": 13,
+      "category": 12,
       "supplier": 34,
       "stock": 1000
    }
@@ -12394,7 +12394,7 @@
       "sell_price": 0.05,
       "hide_product": 1,
       "source": 4,
-      "category": 13,
+      "category": 12,
       "supplier": 34,
       "stock": 2000
    }
@@ -12410,7 +12410,7 @@
       "sell_price": 0.07,
       "hide_product": 1,
       "source": 4,
-      "category": 13,
+      "category": 12,
       "supplier": 34,
       "stock": 2100
    }
@@ -12426,7 +12426,7 @@
       "sell_price": 0.05,
       "hide_product": 1,
       "source": 4,
-      "category": 13,
+      "category": 12,
       "supplier": 34,
       "stock": 2000
    }
@@ -12442,7 +12442,7 @@
       "sell_price": 0.1,
       "hide_product": 1,
       "source": 4,
-      "category": 13,
+      "category": 12,
       "supplier": 34,
       "stock": 2000
    }
@@ -12458,7 +12458,7 @@
       "sell_price": 0.12,
       "hide_product": 0,
       "source": 4,
-      "category": 13,
+      "category": 12,
       "supplier": 34,
       "stock": 0
    }
@@ -12474,7 +12474,7 @@
       "sell_price": 0.15,
       "hide_product": 1,
       "source": 4,
-      "category": 13,
+      "category": 12,
       "supplier": 34,
       "stock": 600
    }
@@ -12490,7 +12490,7 @@
       "sell_price": 0.2,
       "hide_product": 1,
       "source": 4,
-      "category": 13,
+      "category": 12,
       "supplier": 34,
       "stock": 300
    }
@@ -12506,7 +12506,7 @@
       "sell_price": 0.25,
       "hide_product": 1,
       "source": 4,
-      "category": 13,
+      "category": 12,
       "supplier": 34,
       "stock": 120
    }
