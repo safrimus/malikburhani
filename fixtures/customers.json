@@ -415,15 +415,6 @@
  },
  {
    "model": "database.customer",
-   "id": 51,
-   "fields": {
-      "name": "Rahim",
-      "primary_phone": null,
-      "secondary_phone": null
-   }
- },
- {
-   "model": "database.customer",
    "id": 52,
    "fields": {
       "name": "Rahim",
