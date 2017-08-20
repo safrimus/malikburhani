@@ -1,50 +1,86 @@
 [
  {
+   "model": "database.category",
    "id": 1,
-   "name": "Hinges"
+   "fields": {
+      "name": "Hinges"
+   }
  },
  {
+   "model": "database.category",
    "id": 2,
-   "name": "Paint"
+   "fields": {
+      "name": "Paint"
+   }
  },
  {
+   "model": "database.category",
    "id": 3,
-   "name": "Forging"
+   "fields": {
+      "name": "Forging"
+   }
  },
  {
+   "model": "database.category",
    "id": 4,
-   "name": "Sheet Metal"
+   "fields": {
+      "name": "Sheet Metal"
+   }
  },
  {
+   "model": "database.category",
    "id": 5,
-   "name": "Misc"
+   "fields": {
+      "name": "Misc"
+   }
  },
  {
+   "model": "database.category",
    "id": 6,
-   "name": "Plastic Products"
+   "fields": {
+      "name": "Plastic Products"
+   }
  },
  {
+   "model": "database.category",
    "id": 7,
-   "name": "Basket"
+   "fields": {
+      "name": "Basket"
+   }
  },
  {
+   "model": "database.category",
    "id": 8,
-   "name": "Cutting/Grinding Disk"
+   "fields": {
+      "name": "Cutting/Grinding Disk"
+   }
  },
  {
+   "model": "database.category",
    "id": 9,
-   "name": "Elbow"
+   "fields": {
+      "name": "Elbow"
+   }
  },
  {
+   "model": "database.category",
    "id": 10,
-   "name": "Stainless Steel"
+   "fields": {
+      "name": "Stainless Steel"
+   }
  },
  {
+   "model": "database.category",
    "id": 12,
-   "name": "Bolt & Nut"
+   "fields": {
+      "name": "Bolt & Nut"
+   }
  },
  {
+   "model": "database.category",
    "id": 13,
-   "name": "Rubber"
+   "fields": {
+      "name": "Rubber"
+   }
  }
 ]

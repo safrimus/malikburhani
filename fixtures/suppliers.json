@@ -1,290 +1,398 @@
 [
  {
+   "model": "database.supplier",
    "id": 1,
-   "company": "Sakina Hardware",
-   "agent": "Khozema",
-   "email": "",
-   "phone": "",
-   "address": "Local"
+   "fields": {
+      "company": "Sakina Hardware",
+      "agent": "Khozema",
+      "email": "",
+      "phone": "",
+      "address": "Local"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 2,
-   "company": "Best Products",
-   "agent": "Tapan Gupta",
-   "email": "",
-   "phone": "",
-   "address": "India"
+   "fields": {
+      "company": "Best Products",
+      "agent": "Tapan Gupta",
+      "email": "",
+      "phone": "",
+      "address": "India"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 3,
-   "company": "Sabih",
-   "agent": "Sakhi",
-   "email": "",
-   "phone": "",
-   "address": "Local"
+   "fields": {
+      "company": "Sabih",
+      "agent": "Sakhi",
+      "email": "",
+      "phone": "",
+      "address": "Local"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 4,
-   "company": "Misc",
-   "agent": "Misc",
-   "email": "",
-   "phone": "",
-   "address": "Local"
+   "fields": {
+      "company": "Misc",
+      "agent": "Misc",
+      "email": "",
+      "phone": "",
+      "address": "Local"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 5,
-   "company": "Kanan & Co.",
-   "agent": "Wael Kanan",
-   "email": "",
-   "phone": "",
-   "address": "Syria"
+   "fields": {
+      "company": "Kanan & Co.",
+      "agent": "Wael Kanan",
+      "email": "",
+      "phone": "",
+      "address": "Syria"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 6,
-   "company": "Mubarakiya Corner",
-   "agent": "Saifuddinbhai",
-   "email": "",
-   "phone": "",
-   "address": "Local"
+   "fields": {
+      "company": "Mubarakiya Corner",
+      "agent": "Saifuddinbhai",
+      "email": "",
+      "phone": "",
+      "address": "Local"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 7,
-   "company": "Alfa Kuwaitiya Est.",
-   "agent": "Ala",
-   "email": "",
-   "phone": "",
-   "address": "Local"
+   "fields": {
+      "company": "Alfa Kuwaitiya Est.",
+      "agent": "Ala",
+      "email": "",
+      "phone": "",
+      "address": "Local"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 8,
-   "company": "Al-Maroom International",
-   "agent": "Chirag",
-   "email": "",
-   "phone": "",
-   "address": "Local"
+   "fields": {
+      "company": "Al-Maroom International",
+      "agent": "Chirag",
+      "email": "",
+      "phone": "",
+      "address": "Local"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 9,
-   "company": "Montaser Co.",
-   "agent": "Mehmood",
-   "email": "",
-   "phone": "",
-   "address": "Local"
+   "fields": {
+      "company": "Montaser Co.",
+      "agent": "Mehmood",
+      "email": "",
+      "phone": "",
+      "address": "Local"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 10,
-   "company": "Al-Zahra Co. Fan al decor",
-   "agent": "Amir",
-   "email": "",
-   "phone": "",
-   "address": "Local"
+   "fields": {
+      "company": "Al-Zahra Co. Fan al decor",
+      "agent": "Amir",
+      "email": "",
+      "phone": "",
+      "address": "Local"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 11,
-   "company": "Everest Co.",
-   "agent": "Mohan",
-   "email": "",
-   "phone": "",
-   "address": "Local"
+   "fields": {
+      "company": "Everest Co.",
+      "agent": "Mohan",
+      "email": "",
+      "phone": "",
+      "address": "Local"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 12,
-   "company": "Al-Kutbee Al-Shamali Co.",
-   "agent": "Jayntilal",
-   "email": "-",
-   "phone": "",
-   "address": "Local"
+   "fields": {
+      "company": "Al-Kutbee Al-Shamali Co.",
+      "agent": "Jayntilal",
+      "email": "-",
+      "phone": "",
+      "address": "Local"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 13,
-   "company": "Kuwait Canadian Co. For Paints",
-   "agent": "Paper Adhesive",
-   "email": "kccpaint@gmail.com",
-   "phone": "",
-   "address": "5825 -Code no.32089 Hawalli Kuwait"
+   "fields": {
+      "company": "Kuwait Canadian Co. For Paints",
+      "agent": "Paper Adhesive",
+      "email": "kccpaint@gmail.com",
+      "phone": "",
+      "address": "5825 -Code no.32089 Hawalli Kuwait"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 14,
-   "company": "Hindustan Building Material. Est",
-   "agent": "Vinod",
-   "email": "hbm tools@hotmail.com",
-   "phone": "",
-   "address": ""
+   "fields": {
+      "company": "Hindustan Building Material. Est",
+      "agent": "Vinod",
+      "email": "hbm tools@hotmail.com",
+      "phone": "",
+      "address": ""
+   }
  },
  {
+   "model": "database.supplier",
    "id": 15,
-   "company": "Florida",
-   "agent": "Mustafa, Joher",
-   "email": "",
-   "phone": "",
-   "address": ""
+   "fields": {
+      "company": "Florida",
+      "agent": "Mustafa, Joher",
+      "email": "",
+      "phone": "",
+      "address": ""
+   }
  },
  {
+   "model": "database.supplier",
    "id": 16,
-   "company": "Hassan Al-Jadi",
-   "agent": "Pratik, Mustafa, Abbas",
-   "email": "",
-   "phone": "",
-   "address": ""
+   "fields": {
+      "company": "Hassan Al-Jadi",
+      "agent": "Pratik, Mustafa, Abbas",
+      "email": "",
+      "phone": "",
+      "address": ""
+   }
  },
  {
+   "model": "database.supplier",
    "id": 17,
-   "company": "Asraf Malhotra",
-   "agent": "Mr. Abbas",
-   "email": "",
-   "phone": "",
-   "address": "23354 Safat 13094 Kuwait"
+   "fields": {
+      "company": "Asraf Malhotra",
+      "agent": "Mr. Abbas",
+      "email": "",
+      "phone": "",
+      "address": "23354 Safat 13094 Kuwait"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 18,
-   "company": "The Green Power Co.",
-   "agent": "",
-   "email": "contact@gpc-kwt.com / falsayed@qualitynet.net",
-   "phone": "",
-   "address": "42047, Shuwaikh 70651 - Kuwait"
+   "fields": {
+      "company": "The Green Power Co.",
+      "agent": "",
+      "email": "contact@gpc-kwt.com / falsayed@qualitynet.net",
+      "phone": "",
+      "address": "42047, Shuwaikh 70651 - Kuwait"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 19,
-   "company": "Zainco United",
-   "agent": "Mustan",
-   "email": "",
-   "phone": "",
-   "address": "52 Dasman-15451 Kuwait"
+   "fields": {
+      "company": "Zainco United",
+      "agent": "Mustan",
+      "email": "",
+      "phone": "",
+      "address": "52 Dasman-15451 Kuwait"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 20,
-   "company": "Dar Alokod for Gen. Trdg. & Construction",
-   "agent": "Moh'd Ah'd Al-Rifai",
-   "email": "",
-   "phone": "",
-   "address": ""
+   "fields": {
+      "company": "Dar Alokod for Gen. Trdg. & Construction",
+      "agent": "Moh'd Ah'd Al-Rifai",
+      "email": "",
+      "phone": "",
+      "address": ""
+   }
  },
  {
+   "model": "database.supplier",
    "id": 21,
-   "company": "Midland Hardware",
-   "agent": "Mr. Ali",
-   "email": "",
-   "phone": "",
-   "address": ""
+   "fields": {
+      "company": "Midland Hardware",
+      "agent": "Mr. Ali",
+      "email": "",
+      "phone": "",
+      "address": ""
+   }
  },
  {
+   "model": "database.supplier",
    "id": 22,
-   "company": "Kuwait Bayark",
-   "agent": "Mr. Abbasbhai",
-   "email": "",
-   "phone": "",
-   "address": ""
+   "fields": {
+      "company": "Kuwait Bayark",
+      "agent": "Mr. Abbasbhai",
+      "email": "",
+      "phone": "",
+      "address": ""
+   }
  },
  {
+   "model": "database.supplier",
    "id": 23,
-   "company": "OASIS Int'l",
-   "agent": "Mr. Kezar",
-   "email": "sales@oasis-int.com",
-   "phone": "",
-   "address": ""
+   "fields": {
+      "company": "OASIS Int'l",
+      "agent": "Mr. Kezar",
+      "email": "sales@oasis-int.com",
+      "phone": "",
+      "address": ""
+   }
  },
  {
+   "model": "database.supplier",
    "id": 24,
-   "company": "Vikas Industries",
-   "agent": "Kumar in Kuwait.",
-   "email": "",
-   "phone": "",
-   "address": ""
+   "fields": {
+      "company": "Vikas Industries",
+      "agent": "Kumar in Kuwait.",
+      "email": "",
+      "phone": "",
+      "address": ""
+   }
  },
  {
+   "model": "database.supplier",
    "id": 25,
-   "company": "Sky Al-Wataniya Co.",
-   "agent": "",
-   "email": "sojanomalloor@hotmail.com",
-   "phone": "",
-   "address": "Rawda Complex Jaleeb 1st floor office no:15"
+   "fields": {
+      "company": "Sky Al-Wataniya Co.",
+      "agent": "",
+      "email": "sojanomalloor@hotmail.com",
+      "phone": "",
+      "address": "Rawda Complex Jaleeb 1st floor office no:15"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 26,
-   "company": "Fremont Exhibit.",
-   "agent": "Taherbhai",
-   "email": "fremonttrading@gmail.com",
-   "phone": "",
-   "address": ""
+   "fields": {
+      "company": "Fremont Exhibit.",
+      "agent": "Taherbhai",
+      "email": "fremonttrading@gmail.com",
+      "phone": "",
+      "address": ""
+   }
  },
  {
+   "model": "database.supplier",
    "id": 27,
-   "company": "Zahra al-salmi",
-   "agent": "Abu Akram",
-   "email": "",
-   "phone": "",
-   "address": ""
+   "fields": {
+      "company": "Zahra al-salmi",
+      "agent": "Abu Akram",
+      "email": "",
+      "phone": "",
+      "address": ""
+   }
  },
  {
+   "model": "database.supplier",
    "id": 28,
-   "company": "Golden Lock Co.",
-   "agent": "",
-   "email": "goldenlockco@gmail.com",
-   "phone": "",
-   "address": "P.O. box 2755 Safat 13028 Kuwait."
+   "fields": {
+      "company": "Golden Lock Co.",
+      "agent": "",
+      "email": "goldenlockco@gmail.com",
+      "phone": "",
+      "address": "P.O. box 2755 Safat 13028 Kuwait."
+   }
  },
  {
+   "model": "database.supplier",
    "id": 29,
-   "company": "Khaliffa & Gazzawi Trdg. Co.",
-   "agent": "Yusuf",
-   "email": "",
-   "phone": "",
-   "address": "1958 Safat Code 13020 Kuwait"
+   "fields": {
+      "company": "Khaliffa & Gazzawi Trdg. Co.",
+      "agent": "Yusuf",
+      "email": "",
+      "phone": "",
+      "address": "1958 Safat Code 13020 Kuwait"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 30,
-   "company": "Batul Est.",
-   "agent": "Aatif",
-   "email": "",
-   "phone": "",
-   "address": ""
+   "fields": {
+      "company": "Batul Est.",
+      "agent": "Aatif",
+      "email": "",
+      "phone": "",
+      "address": ""
+   }
  },
  {
+   "model": "database.supplier",
    "id": 31,
-   "company": "ProMaster",
-   "agent": "",
-   "email": "",
-   "phone": "",
-   "address": "P.O. Box:303, Al-Jabria Kuwait."
+   "fields": {
+      "company": "ProMaster",
+      "agent": "",
+      "email": "",
+      "phone": "",
+      "address": "P.O. Box:303, Al-Jabria Kuwait."
+   }
  },
  {
+   "model": "database.supplier",
    "id": 32,
-   "company": "Cyber Int'l co.",
-   "agent": "Khazema",
-   "email": "sales@cyberkw.com",
-   "phone": "",
-   "address": "P.O. box no:3540 Safat 13035 Kuwait."
+   "fields": {
+      "company": "Cyber Int'l co.",
+      "agent": "Khazema",
+      "email": "sales@cyberkw.com",
+      "phone": "",
+      "address": "P.O. box no:3540 Safat 13035 Kuwait."
+   }
  },
  {
+   "model": "database.supplier",
    "id": 33,
-   "company": "Ez Al-Deira",
-   "agent": "",
-   "email": "sales@ezaldeira.com",
-   "phone": "",
-   "address": ""
+   "fields": {
+      "company": "Ez Al-Deira",
+      "agent": "",
+      "email": "sales@ezaldeira.com",
+      "phone": "",
+      "address": ""
+   }
  },
  {
+   "model": "database.supplier",
    "id": 34,
-   "company": "Sahinler",
-   "agent": "Ali Turky",
-   "email": "info@sahinler-forge.com",
-   "phone": "",
-   "address": "kayapa sanayi bulvan no:23 16315-1 nilofer bursa turkiye"
+   "fields": {
+      "company": "Sahinler",
+      "agent": "Ali Turky",
+      "email": "info@sahinler-forge.com",
+      "phone": "",
+      "address": "kayapa sanayi bulvan no:23 16315-1 nilofer bursa turkiye"
+   }
  },
  {
+   "model": "database.supplier",
    "id": 35,
-   "company": "Qallaf & Bazzaj Co.",
-   "agent": "Firoz",
-   "email": "",
-   "phone": "",
-   "address": ""
+   "fields": {
+      "company": "Qallaf & Bazzaj Co.",
+      "agent": "Firoz",
+      "email": "",
+      "phone": "",
+      "address": ""
+   }
  },
  {
+   "model": "database.supplier",
    "id": 36,
-   "company": "Uniexpo",
-   "agent": "Ashutosh Dhami",
-   "email": "",
-   "phone": "",
-   "address": "India"
+   "fields": {
+      "company": "Uniexpo",
+      "agent": "Ashutosh Dhami",
+      "email": "",
+      "phone": "",
+      "address": "India"
+   }
  }
 ]

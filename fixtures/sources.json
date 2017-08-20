@@ -1,18 +1,30 @@
 [
  {
+   "model": "database.source",
    "id": 1,
-   "name": "Syria"
+   "fields": {
+     "name": "Syria"
+   }
  },
  {
+   "model": "database.source",
    "id": 2,
-   "name": "Local"
+   "fields": {
+     "name": "Local"
+   }
  },
  {
+   "model": "database.source",
    "id": 3,
-   "name": "India"
+   "fields": {
+     "name": "India"
+   }
  },
  {
+   "model": "database.source",
    "id": 4,
-   "name": "Turkey"
+   "fields": {
+     "name": "Turkey"
+   }
  }
 ]
