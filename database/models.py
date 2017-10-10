@@ -54,6 +54,7 @@ class Invoice(models.Model):
     created = models.DateTimeField(default=timezone.now, help_text="Date of creation of the invoice")
     credit = models.BooleanField(default=False, help_text="Credit sale")
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT)
+    date_of_sale = models.DateTimeField(default=timezone.now, help_text="Date of sale for the invoice")
 
 
 class InvoiceProduct(models.Model):
