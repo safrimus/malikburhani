@@ -27,6 +27,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = database.models.Product.objects.all()
     serializer_class = ProductSerializer
+    filter_fields = ('hide_product',)
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
