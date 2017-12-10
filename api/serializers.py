@@ -36,7 +36,7 @@ class ProductSerializer(serializers.ModelSerializer):
 class InvoiceProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.InvoiceProduct
-        exclude = ('invoice',)
+        exclude = ('invoice', 'id',)
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
@@ -45,6 +45,18 @@ class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Invoice
         fields = '__all__'
+
+    def validate(self, data):
+        products_data = data["products"]
+
+        if not products_data:
+            raise serializers.ValidationError("no products in invoice")
+
+        for product in products_data:
+            if product["sell_price"] <= 0.0 or product["quantity"] <= 0:
+                raise serializers.ValidationError("sell_price and quantity must be greater than 0")
+
+        return data
 
     def create(self, validated_data):
         products_data = validated_data.pop('products')

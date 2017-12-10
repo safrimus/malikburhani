@@ -60,7 +60,7 @@ class Invoice(models.Model):
 class InvoiceProduct(models.Model):
     invoice = models.ForeignKey(Invoice, related_name="products", on_delete=models.PROTECT)
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
-    quantity = models.IntegerField(default=0, help_text="Quantity sold")
-    sell_price = models.DecimalField(default=0.0, max_digits=7, decimal_places=3, help_text="Sell price at time of sale")
+    quantity = models.IntegerField(help_text="Quantity sold")
+    sell_price = models.DecimalField(max_digits=7, decimal_places=3, help_text="Sell price at time of sale")
     cost_price = models.DecimalField(default=0.0, max_digits=7, decimal_places=3, help_text="Cost price at time of sale")
     returned_quantity = models.IntegerField(default=0, help_text="Quantity returned by customer")
