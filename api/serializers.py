@@ -4,40 +4,44 @@ import database.models as models
 
 
 class CustomerSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = models.Customer
         fields = '__all__'
 
 
 class SupplierSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = models.Supplier
         fields = '__all__'
 
 
 class SourceSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = models.Source
         fields = '__all__'
 
 
 class CategorySerializer(serializers.ModelSerializer):
+
     class Meta:
         model = models.Category
         fields = '__all__'
 
 
 class ProductSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = models.Product
         fields = '__all__'
 
-
 class InvoiceProductSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = models.InvoiceProduct
         exclude = ('invoice', 'id',)
-
 
 class InvoiceSerializer(serializers.ModelSerializer):
     products = InvoiceProductSerializer(many=True)

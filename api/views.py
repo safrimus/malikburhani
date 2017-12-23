@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from .serializers import *
+from .filters import *
 
 import database.models
 
@@ -33,6 +34,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 class InvoiceViewSet(viewsets.ModelViewSet):
     queryset = database.models.Invoice.objects.all()
     serializer_class = InvoiceSerializer
+    filter_class = InvoiceFilter
 
 
 class InvoiceProductViewSet(viewsets.ModelViewSet):
