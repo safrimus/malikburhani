@@ -57,10 +57,23 @@ class InvoiceSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("no products in invoice")
 
         for product in products_data:
-            if product["sell_price"] <= 0.0 or product["quantity"] <= 0:
-                raise serializers.ValidationError("sell_price and quantity must be greater than 0")
+            try:
+                if product["sell_price"] <= 0.0 or product["quantity"] <= 0:
+                    raise serializers.ValidationError("sell_price and quantity must be greater than 0")
+            except KeyError:
+                pass
 
         return data
+
+    def update(self, instance, validated_data):
+        products_data = validated_data.pop('products')
+
+        for product in products_data:
+            invoice_product = models.InvoiceProduct.objects.get(invoice=instance.id, product=product["product"])
+            invoice_product.returned_quantity = product["returned_quantity"]
+            invoice_product.save(update_fields=["returned_quantity"])
+
+        return instance
 
     def create(self, validated_data):
         products_data = validated_data.pop('products')
