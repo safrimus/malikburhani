@@ -13,4 +13,5 @@ class InvoiceFilter(filters.FilterSet):
             'created': ['lte', 'gte'],
             'date_of_sale': ['lte', 'gte'],
             'credit': ['exact',],
+            'id': ['exact',],
         }
