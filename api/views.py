@@ -37,6 +37,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     filter_class = InvoiceFilter
 
 
-class InvoiceProductViewSet(viewsets.ModelViewSet):
-    queryset = database.models.InvoiceProduct.objects.all()
-    serializer_class = InvoiceProductSerializer
+class CreditPaymentsViewSet(viewsets.ModelViewSet):
+    queryset = database.models.InvoiceCreditPayment.objects.all()
+    serializer_class = InvoiceCreditPaymentSerializer
+    filter_fields = ('invoice',)

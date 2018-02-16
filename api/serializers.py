@@ -37,38 +37,49 @@ class ProductSerializer(serializers.ModelSerializer):
         model = models.Product
         fields = '__all__'
 
+
 class InvoiceProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.InvoiceProduct
         exclude = ('invoice', 'id',)
 
+
+class InvoiceCreditPaymentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.InvoiceCreditPayment
+        exclude = ('id',)
+
+
 class InvoiceSerializer(serializers.ModelSerializer):
     products = InvoiceProductSerializer(many=True)
+    credit_payments = InvoiceCreditPaymentSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Invoice
         fields = '__all__'
 
     def validate(self, data):
-        products_data = data["products"]
+        products = data["products"]
 
-        if not products_data:
+        if not products:
             raise serializers.ValidationError("no products in invoice")
 
-        for product in products_data:
+        for product in products:
             try:
                 if product["sell_price"] <= 0.0 or product["quantity"] <= 0:
                     raise serializers.ValidationError("sell_price and quantity must be greater than 0")
             except KeyError:
                 pass
 
+
         return data
 
     def update(self, instance, validated_data):
-        products_data = validated_data.pop('products')
+        products = validated_data.pop('products')
 
-        for product in products_data:
+        for product in products:
             invoice_product = models.InvoiceProduct.objects.get(invoice=instance.id, product=product["product"])
             invoice_product.returned_quantity = product["returned_quantity"]
             invoice_product.save(update_fields=["returned_quantity"])
@@ -76,10 +87,10 @@ class InvoiceSerializer(serializers.ModelSerializer):
         return instance
 
     def create(self, validated_data):
-        products_data = validated_data.pop('products')
+        products = validated_data.pop('products')
         invoice = models.Invoice.objects.create(**validated_data)
 
-        for product in products_data:
+        for product in products:
             cost_price = models.Product.objects.get(id=product["product"].id).cost_price
             models.InvoiceProduct.objects.create(invoice=invoice, cost_price=cost_price, **product)
 

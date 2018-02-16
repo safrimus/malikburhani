@@ -64,3 +64,9 @@ class InvoiceProduct(models.Model):
     sell_price = models.DecimalField(max_digits=7, decimal_places=3, help_text="Sell price at time of sale")
     cost_price = models.DecimalField(default=0.0, max_digits=7, decimal_places=3, help_text="Cost price at time of sale")
     returned_quantity = models.IntegerField(default=0, help_text="Quantity returned by customer")
+
+
+class InvoiceCreditPayment(models.Model):
+    invoice = models.ForeignKey(Invoice, related_name="credit_payments", on_delete=models.PROTECT)
+    payment = models.DecimalField(max_digits=7, decimal_places=3, help_text="Credit payment for this invoice")
+    date_of_payment = models.DateTimeField(default=timezone.now, help_text="Date of credit payment")
