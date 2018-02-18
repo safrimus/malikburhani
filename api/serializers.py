@@ -3,6 +3,7 @@ from rest_framework import serializers
 import database.models as models
 
 
+# Customer
 class CustomerSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -10,13 +11,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SupplierSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.Supplier
-        fields = '__all__'
-
-
+# Source
 class SourceSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -24,6 +19,7 @@ class SourceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+# Category
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -31,6 +27,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+# Product
 class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -38,6 +35,15 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+# Supplier
+class SupplierSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Supplier
+        fields = '__all__'
+
+
+# Invoice
 class InvoiceProductSerializer(serializers.ModelSerializer):
 
     class Meta:

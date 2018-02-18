@@ -39,7 +39,7 @@ class Product(models.Model):
     hide_product = models.BooleanField(default=False, help_text="Hide from list of available products")
     source = models.ForeignKey(Source, on_delete=models.PROTECT)
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
-    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
+    supplier = models.ForeignKey(Supplier, related_name="products", on_delete=models.PROTECT)
 
 
 # Invoice
