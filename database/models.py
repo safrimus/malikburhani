@@ -42,7 +42,6 @@ class Product(models.Model):
     supplier = models.ForeignKey(Supplier, related_name="products", on_delete=models.PROTECT)
 
 
-# Invoice
 class Customer(models.Model):
     created = models.DateTimeField(default=timezone.now, help_text="Date customer added to database")
     name = models.TextField(unique=True, help_text="Name of the customer")
@@ -50,6 +49,7 @@ class Customer(models.Model):
     secondary_phone = models.CharField(blank=True, null=True, max_length=25, help_text="Phone number of the customer")
 
 
+# Invoice
 class Invoice(models.Model):
     created = models.DateTimeField(default=timezone.now, help_text="Date of creation of the invoice")
     credit = models.BooleanField(default=False, help_text="Credit sale")
