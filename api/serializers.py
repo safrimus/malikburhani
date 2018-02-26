@@ -1,10 +1,12 @@
 from rest_framework import serializers
+from drf_queryfields import QueryFieldsMixin
+from django.db.models import Sum, F, FloatField
 
 import database.models as models
 
 
 # Customer
-class CustomerSerializer(serializers.ModelSerializer):
+class CustomerSerializer(QueryFieldsMixin, serializers.ModelSerializer):
 
     class Meta:
         model = models.Customer
@@ -12,7 +14,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 
 # Source
-class SourceSerializer(serializers.ModelSerializer):
+class SourceSerializer(QueryFieldsMixin, serializers.ModelSerializer):
 
     class Meta:
         model = models.Source
@@ -20,7 +22,7 @@ class SourceSerializer(serializers.ModelSerializer):
 
 
 # Category
-class CategorySerializer(serializers.ModelSerializer):
+class CategorySerializer(QueryFieldsMixin, serializers.ModelSerializer):
 
     class Meta:
         model = models.Category
@@ -28,7 +30,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 # Product
-class ProductSerializer(serializers.ModelSerializer):
+class ProductSerializer(QueryFieldsMixin, serializers.ModelSerializer):
 
     class Meta:
         model = models.Product
@@ -36,11 +38,19 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 # Supplier
-class SupplierSerializer(serializers.ModelSerializer):
+class SupplierSerializer(QueryFieldsMixin, serializers.ModelSerializer):
 
     class Meta:
         model = models.Supplier
         fields = '__all__'
+
+
+# Credit Payments
+class InvoiceCreditPaymentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.InvoiceCreditPayment
+        exclude = ('id',)
 
 
 # Invoice
@@ -51,20 +61,23 @@ class InvoiceProductSerializer(serializers.ModelSerializer):
         exclude = ('invoice', 'id',)
 
 
-class InvoiceCreditPaymentSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.InvoiceCreditPayment
-        exclude = ('id',)
-
-
-class InvoiceSerializer(serializers.ModelSerializer):
+class InvoiceSerializer(QueryFieldsMixin, serializers.ModelSerializer):
     products = InvoiceProductSerializer(many=True)
-    credit_payments = InvoiceCreditPaymentSerializer(many=True, read_only=True)
+    invoice_total = serializers.SerializerMethodField(read_only=True)
+    payments_total = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Invoice
         fields = '__all__'
+
+    def get_invoice_total(self, obj):
+        products = models.InvoiceProduct.objects.filter(invoice=obj.id)
+        return products.aggregate(total=Sum((F('quantity') - F('returned_quantity')) * F('sell_price'),
+                                            output_field=FloatField()))['total']
+
+    def get_payments_total(self, obj):
+        payments = models.InvoiceCreditPayment.objects.filter(invoice=obj.id)
+        return payments.aggregate(total=Sum('payment', output_field=FloatField()))['total']
 
     def validate(self, data):
         products = data["products"]
@@ -78,7 +91,6 @@ class InvoiceSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError("sell_price and quantity must be greater than 0")
             except KeyError:
                 pass
-
 
         return data
 
