@@ -15,18 +15,28 @@ class CustomerSerializer(QueryFieldsMixin, serializers.ModelSerializer):
 
 # Source
 class SourceSerializer(QueryFieldsMixin, serializers.ModelSerializer):
+    total_value = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Source
         fields = '__all__'
 
+    def get_total_value(self, obj):
+        products = models.Product.objects.filter(source=obj.id)
+        return products.aggregate(total=Sum(F('stock') * F('cost_price'), output_field=FloatField()))['total']
+
 
 # Category
 class CategorySerializer(QueryFieldsMixin, serializers.ModelSerializer):
+    total_value = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Category
         fields = '__all__'
+
+    def get_total_value(self, obj):
+        products = models.Product.objects.filter(category=obj.id)
+        return products.aggregate(total=Sum(F('stock') * F('cost_price'), output_field=FloatField()))['total']
 
 
 # Product
