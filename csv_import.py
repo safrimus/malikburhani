@@ -28,7 +28,7 @@ with open('csv/tblProductDetails.txt') as csvfile:
         # Product
         skip_list = [1, 272, 275, 285, 286, 321, 391, 402, 409, 417, 434, 465, 479, 565, 566, 623, 626, 627,
                      667, 673, 679, 680, 681, 682, 684, 685, 709, 753, 814, 824]
-        if row['Product ID'] in skip_list:
+        if int(row['Product ID']) in skip_list:
             continue
 
         hide_product = 1 - int(row['Display'])
