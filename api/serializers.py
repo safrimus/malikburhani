@@ -98,7 +98,13 @@ class InvoiceSerializer(QueryFieldsMixin, serializers.ModelSerializer):
         for product in products:
             try:
                 if product["sell_price"] <= 0.0 or product["quantity"] <= 0:
-                    raise serializers.ValidationError("sell_price and quantity must be greater than 0")
+                    raise serializers.ValidationError("Sell price and quantity must be greater than 0")
+            except KeyError:
+                pass
+
+            try:
+                if product["returned_quantity"] > product["quantity"]:
+                    raise serializers.ValidationError("Return quantity must be less than quantity sold")
             except KeyError:
                 pass
 
@@ -109,8 +115,13 @@ class InvoiceSerializer(QueryFieldsMixin, serializers.ModelSerializer):
 
         for product in products:
             invoice_product = models.InvoiceProduct.objects.get(invoice=instance.id, product=product["product"])
+            original_returned_quantity = invoice_product.returned_quantity
             invoice_product.returned_quantity = product["returned_quantity"]
             invoice_product.save(update_fields=["returned_quantity"])
+
+            product_object = models.Product.objects.get(id=product["product"].id)
+            product_object.stock += (product["returned_quantity"] - original_returned_quantity)
+            product_object.save(update_fields=["stock"])
 
         return instance
 
@@ -119,7 +130,11 @@ class InvoiceSerializer(QueryFieldsMixin, serializers.ModelSerializer):
         invoice = models.Invoice.objects.create(**validated_data)
 
         for product in products:
-            cost_price = models.Product.objects.get(id=product["product"].id).cost_price
-            models.InvoiceProduct.objects.create(invoice=invoice, cost_price=cost_price, **product)
+            product_object = models.Product.objects.get(id=product["product"].id)
+
+            models.InvoiceProduct.objects.create(invoice=invoice, cost_price=product_object.cost_price, **product)
+
+            product_object.stock -= product["quantity"]
+            product_object.save(update_fields=["stock"])
 
         return invoice
