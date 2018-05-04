@@ -1,8 +1,31 @@
 from django.db import models
 from django.utils import timezone
 
+import re
 
-# Create your models here.
+
+class NaturalSortField(models.TextField):
+    def __init__(self, *args, **kwargs):
+        self.for_field = kwargs.pop('for_field', None)
+        kwargs.setdefault('db_index', True)
+        kwargs.setdefault('editable', False)
+        super(NaturalSortField, self).__init__(*args, **kwargs)
+
+    def pre_save(self, model_instance, add):
+        return self.naturalize(getattr(model_instance, self.for_field))
+
+    def naturalize(self, string):
+        def naturalize_int_match(match):
+            return '%08d' % (int(match.group(0)),)
+
+        string = string.lower()
+        string = string.strip()
+        string = re.sub(r'^the\s+', '', string)
+        string = re.sub(r'\d+', naturalize_int_match, string)
+
+        return string
+
+
 class Supplier(models.Model):
     class Meta:
         unique_together = ('company', 'agent',)
@@ -29,8 +52,11 @@ class Product(models.Model):
         unique_together = ('name', 'description', 'size', 'supplier',)
 
     name = models.TextField(help_text="Name of the product")
+    name_sort = NaturalSortField(blank=True, null=True, for_field='name')
     description = models.TextField(blank=True, null=True, help_text="Description of the product")
+    description_sort = NaturalSortField(blank=True, null=True, for_field='description')
     size = models.TextField(blank=True, null=True, help_text="Size of the product")
+    size_sort = NaturalSortField(blank=True, null=True, for_field='size')
     cost_price = models.DecimalField(default=0.0, max_digits=7, decimal_places=3, help_text="Cost price of the product")
     sell_price = models.DecimalField(default=0.0, max_digits=7, decimal_places=3, help_text="Sell price of the product")
     stock = models.IntegerField(default=0, help_text="Quantity of the product in stock")

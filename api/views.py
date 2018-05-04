@@ -1,6 +1,9 @@
-from rest_framework import viewsets
-from .serializers import *
 from .filters import *
+from .serializers import *
+from rest_framework import viewsets
+from rest_framework.filters import OrderingFilter
+from django_filters import rest_framework as filters
+
 
 import database.models
 
@@ -28,7 +31,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = database.models.Product.objects.all()
     serializer_class = ProductSerializer
+    filter_backends = (filters.DjangoFilterBackend, OrderingFilter,)
     filter_fields = ('hide_product', 'supplier')
+    ordering_fileds = ('name_sort',)
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
