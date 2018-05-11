@@ -1,8 +1,12 @@
 from .filters import *
 from .serializers import *
+
 from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter
 from django_filters import rest_framework as filters
+
+from django.db.models import Sum, F
+from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 
 
 import database.models
@@ -37,12 +41,30 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
-    queryset = database.models.Invoice.objects.all()
     serializer_class = InvoiceSerializer
     filter_class = InvoiceFilter
+
+    def get_queryset(self):
+        queryset = database.models.Invoice.objects.all()
+        queryset = self.get_serializer_class().setup_eager_loading(queryset)
+        return queryset
 
 
 class CreditPaymentsViewSet(viewsets.ModelViewSet):
     queryset = database.models.InvoiceCreditPayment.objects.all()
     serializer_class = InvoiceCreditPaymentSerializer
     filter_fields = ('invoice',)
+
+
+class SalesTotalViewSet(viewsets.ModelViewSet):
+    serializer_class = SalesTotalSerializer
+    filter_class = SalesTotalFilter
+
+    def get_queryset(self):
+        queryset = database.models.Invoice.objects.annotate(month=ExtractMonth('date_of_sale'), year=ExtractYear('date_of_sale'))\
+                                                  .annotate(_sum=Sum(F('invoice_total') - Coalesce(F('payments_total'), 0.0)))\
+                                                  .values('year', 'month', '_sum')\
+                                                  .annotate(sum=F('_sum'))\
+                                                  .values('year', 'month', 'sum')\
+                                                  .order_by('year', 'month')
+        return queryset

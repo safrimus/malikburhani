@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.db.models import Sum, F, FloatField, Subquery, OuterRef
 
 import re
 
@@ -26,6 +27,7 @@ class NaturalSortField(models.TextField):
         return string
 
 
+# Supplier
 class Supplier(models.Model):
     class Meta:
         unique_together = ('company', 'agent',)
@@ -37,16 +39,31 @@ class Supplier(models.Model):
     address = models.TextField(blank=True, null=True, help_text="Address of the supplier")
 
 
+# Source and Category
+class TotalValueManager(models.Manager):
+    def get_queryset(self):
+        queryset = super(TotalValueManager, self).get_queryset()
+        queryset = queryset.annotate(total_value=Sum(F('products__stock') * F('products__cost_price'), output_field=FloatField()))
+        return queryset
+
+
 class Source(models.Model):
     name = models.TextField(unique=True, help_text="Name of a country and/or city")
     created = models.DateTimeField(default=timezone.now, help_text="Date product was added to database")
+
+    # Override the default ORM manager
+    objects = TotalValueManager()
 
 
 class Category(models.Model):
     name = models.TextField(unique=True, help_text="Name of a product category")
     created = models.DateTimeField(default=timezone.now, help_text="Date product was added to database")
 
+    # Override the default ORM manager
+    objects = TotalValueManager()
 
+
+# Product
 class Product(models.Model):
     class Meta:
         unique_together = ('name', 'description', 'size', 'supplier',)
@@ -63,11 +80,12 @@ class Product(models.Model):
     created = models.DateTimeField(default=timezone.now, help_text="Date product was added to database")
     image = models.ImageField(blank=True, null=True, help_text="An image of the product")
     hide_product = models.BooleanField(default=False, help_text="Hide from list of available products")
-    source = models.ForeignKey(Source, on_delete=models.PROTECT)
-    category = models.ForeignKey(Category, on_delete=models.PROTECT)
+    source = models.ForeignKey(Source, related_name="products", on_delete=models.PROTECT)
+    category = models.ForeignKey(Category, related_name="products", on_delete=models.PROTECT)
     supplier = models.ForeignKey(Supplier, related_name="products", on_delete=models.PROTECT)
 
 
+# Customer
 class Customer(models.Model):
     created = models.DateTimeField(default=timezone.now, help_text="Date customer added to database")
     name = models.TextField(unique=True, help_text="Name of the customer")
@@ -76,11 +94,29 @@ class Customer(models.Model):
 
 
 # Invoice
+class InvoiceTotalManager(models.Manager):
+    def get_queryset(self):
+        queryset = super(InvoiceTotalManager, self).get_queryset()
+
+        invoice_total = Subquery(InvoiceProduct.objects.filter(invoice=OuterRef('pk')).values('invoice_id')\
+                            .annotate(sum=Sum((F('quantity') - F('returned_quantity')) * F('sell_price'),
+                                output_field=FloatField()))\
+                            .values('sum')[:1])
+        payments_total = Subquery(InvoiceCreditPayment.objects.filter(invoice=OuterRef('pk')).values('invoice_id')\
+                            .annotate(sum=Sum('payment', output_field=FloatField())).values('sum')[:1])
+
+        queryset = queryset.annotate(invoice_total=invoice_total, payments_total=payments_total)
+        return queryset
+
+
 class Invoice(models.Model):
     created = models.DateTimeField(default=timezone.now, help_text="Date of creation of the invoice")
     credit = models.BooleanField(default=False, help_text="Credit sale")
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT)
     date_of_sale = models.DateTimeField(default=timezone.now, help_text="Date of sale for the invoice")
+
+    # Override the default ORM manager
+    objects = InvoiceTotalManager()
 
 
 class InvoiceProduct(models.Model):
