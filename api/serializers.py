@@ -52,7 +52,7 @@ class InvoiceCreditPaymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.InvoiceCreditPayment
-        fields = ('invoice_id', 'payment', 'date_of_payment',)
+        fields = ('invoice', 'payment', 'date_of_payment',)
 
 
 # Invoice
