@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from django.db.models import Sum, F, FloatField, Subquery, OuterRef
+from django.db.models import Sum, F, Subquery, OuterRef
 
 import re
 
@@ -43,7 +43,8 @@ class Supplier(models.Model):
 class TotalValueManager(models.Manager):
     def get_queryset(self):
         queryset = super(TotalValueManager, self).get_queryset()
-        queryset = queryset.annotate(total_value=Sum(F('products__stock') * F('products__cost_price'), output_field=FloatField()))
+        queryset = queryset.annotate(total_value=Sum(F('products__stock') * F('products__cost_price'),
+                                     output_field=models.DecimalField(max_digits=15, decimal_places=3)))
         return queryset
 
 
@@ -100,12 +101,17 @@ class InvoiceTotalManager(models.Manager):
 
         invoice_total = Subquery(InvoiceProduct.objects.filter(invoice=OuterRef('pk')).values('invoice_id')\
                             .annotate(sum=Sum((F('quantity') - F('returned_quantity')) * F('sell_price'),
-                                output_field=FloatField()))\
+                                output_field=models.DecimalField(max_digits=15, decimal_places=3)))\
+                            .values('sum')[:1])
+        profit_total =  Subquery(InvoiceProduct.objects.filter(invoice=OuterRef('pk')).values('invoice_id')\
+                            .annotate(sum=Sum((F('quantity') - F('returned_quantity')) * (F('sell_price') - F('cost_price')),
+                                output_field=models.DecimalField(max_digits=15, decimal_places=3)))\
                             .values('sum')[:1])
         payments_total = Subquery(InvoiceCreditPayment.objects.filter(invoice=OuterRef('pk')).values('invoice_id')\
-                            .annotate(sum=Sum('payment', output_field=FloatField())).values('sum')[:1])
+                            .annotate(sum=Sum('payment', output_field=models.DecimalField(max_digits=15, decimal_places=3)))
+                            .values('sum')[:1])
 
-        queryset = queryset.annotate(invoice_total=invoice_total, payments_total=payments_total)
+        queryset = queryset.annotate(invoice_total=invoice_total, profit_total=profit_total, payments_total=payments_total)
         return queryset
 
 

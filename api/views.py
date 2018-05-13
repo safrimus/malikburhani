@@ -5,7 +5,7 @@ from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter
 from django_filters import rest_framework as filters
 
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Case, When
 from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 
 
@@ -62,9 +62,17 @@ class SalesTotalViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = database.models.Invoice.objects.annotate(month=ExtractMonth('date_of_sale'), year=ExtractYear('date_of_sale'))\
-                                                  .annotate(_sum=Sum(F('invoice_total') - Coalesce(F('payments_total'), 0.0)))\
-                                                  .values('year', 'month', '_sum')\
-                                                  .annotate(sum=F('_sum'))\
-                                                  .values('year', 'month', 'sum')\
+                                                  .annotate(cratio=Coalesce(F('payments_total') / F('invoice_total'), 0.0))\
+                                                  .annotate(_sales=Sum(Case(
+                                                                When(credit=True, then=Coalesce(F('payments_total'), 0.0)),
+                                                                default='invoice_total',
+                                                            )))\
+                                                  .annotate(_profit=Sum(Case(
+                                                                When(credit=True, then=F('profit_total') * F('cratio')),
+                                                                default='profit_total',
+                                                            )))\
+                                                  .values('year', 'month', '_sales', '_profit')\
+                                                  .annotate(sales=F('_sales'), profit=F('_profit'))\
+                                                  .values('year', 'month', 'sales', 'profit')\
                                                   .order_by('year', 'month')
         return queryset

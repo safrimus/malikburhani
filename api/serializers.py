@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from drf_queryfields import QueryFieldsMixin
-from django.db.models import Sum, F, FloatField
+from django.db.models import Sum, F, DecimalField
 
 import database.models as models
 
@@ -15,7 +15,7 @@ class CustomerSerializer(QueryFieldsMixin, serializers.ModelSerializer):
 
 # Source
 class SourceSerializer(QueryFieldsMixin, serializers.ModelSerializer):
-    total_value = serializers.FloatField(read_only=True)
+    total_value = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
 
     class Meta:
         model = models.Source
@@ -24,7 +24,7 @@ class SourceSerializer(QueryFieldsMixin, serializers.ModelSerializer):
 
 # Category
 class CategorySerializer(QueryFieldsMixin, serializers.ModelSerializer):
-    total_value = serializers.FloatField(read_only=True)
+    total_value = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
 
     class Meta:
         model = models.Category
@@ -65,8 +65,8 @@ class InvoiceProductSerializer(serializers.ModelSerializer):
 
 class InvoiceSerializer(QueryFieldsMixin, serializers.ModelSerializer):
     products = InvoiceProductSerializer(many=True)
-    invoice_total = serializers.FloatField(read_only=True)
-    payments_total = serializers.FloatField(read_only=True)
+    invoice_total = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
+    payments_total = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
 
     class Meta:
         model = models.Invoice
@@ -131,4 +131,5 @@ class InvoiceSerializer(QueryFieldsMixin, serializers.ModelSerializer):
 class SalesTotalSerializer(serializers.Serializer):
     year = serializers.IntegerField(read_only=True)
     month = serializers.IntegerField(read_only=True)
-    sum = serializers.FloatField(read_only=True)
+    sales = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
+    profit = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
