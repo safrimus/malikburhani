@@ -36,13 +36,13 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = database.models.Product.objects.all()
     serializer_class = ProductSerializer
     filter_backends = (filters.DjangoFilterBackend, OrderingFilter,)
-    filter_fields = ('hide_product', 'supplier')
+    filterset_fields = ('hide_product', 'supplier')
     ordering_fileds = ('name_sort',)
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
     serializer_class = InvoiceSerializer
-    filter_class = InvoiceFilter
+    filterset_class = InvoiceFilter
 
     def get_queryset(self):
         queryset = database.models.Invoice.objects.all()
@@ -53,12 +53,12 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 class CreditPaymentsViewSet(viewsets.ModelViewSet):
     queryset = database.models.InvoiceCreditPayment.objects.all()
     serializer_class = InvoiceCreditPaymentSerializer
-    filter_fields = ('invoice',)
+    filterset_fields = ('invoice',)
 
 
 class SalesTotalViewSet(viewsets.ModelViewSet):
     serializer_class = SalesTotalSerializer
-    filter_class = SalesTotalFilter
+    filterset_class = SalesTotalFilter
 
     def get_queryset(self):
         queryset = database.models.Invoice.objects.annotate(month=ExtractMonth('date_of_sale'), year=ExtractYear('date_of_sale'))\
@@ -76,3 +76,9 @@ class SalesTotalViewSet(viewsets.ModelViewSet):
                                                   .values('year', 'month', 'sales', 'profit')\
                                                   .order_by('year', 'month')
         return queryset
+
+# p = InvoiceProduct.objects.select_related('product', 'invoice').annotate(category=F('product__category'))
+# t = p.values('category').annotate(sale=Sum((F('quantity') - F('returned_quantity')) * F('sell_price'), output_field=models.DecimalField(max_digits=15, decimal_places=3)))
+
+# p = InvoiceProduct.objects.select_related('product', 'invoice').annotate(category=F('product__category'), month=ExtractMonth(F('invoice__date_of_sale')), year=ExtractYear(F('invoice__date_of_sale')))
+# t = p.values('category', 'month', 'year').annotate(sale=Sum((F('quantity') - F('returned_quantity')) * F('sell_price'), output_field=models.DecimalField(max_digits=15, decimal_places=3)))
