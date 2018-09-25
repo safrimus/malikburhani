@@ -125,6 +125,21 @@ class Invoice(models.Model):
     objects = InvoiceTotalManager()
 
 
+class InvoiceProductManager(models.Manager):
+    def totals(self):
+        queryset = super(InvoiceProductManager, self).get_queryset()
+
+        payments_total = Subquery(InvoiceCreditPayment.objects.filter(invoice=OuterRef('invoice')).values('invoice_id')\
+                            .annotate(sum=Sum('payment', output_field=models.DecimalField(max_digits=15, decimal_places=3)))
+                            .values('sum')[:1])
+        invoice_total = Subquery(InvoiceProduct.objects.filter(invoice=OuterRef('invoice')).values('invoice_id')\
+                            .annotate(sum=Sum((F('quantity') - F('returned_quantity')) * F('sell_price'),
+                                output_field=models.DecimalField(max_digits=15, decimal_places=3)))\
+                            .values('sum')[:1])
+
+        queryset = queryset.annotate(invoice_total=invoice_total, payments_total=payments_total)
+        return queryset
+
 class InvoiceProduct(models.Model):
     invoice = models.ForeignKey(Invoice, related_name="products", on_delete=models.PROTECT)
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
@@ -132,6 +147,9 @@ class InvoiceProduct(models.Model):
     sell_price = models.DecimalField(max_digits=7, decimal_places=3, help_text="Sell price at time of sale")
     cost_price = models.DecimalField(default=0.0, max_digits=7, decimal_places=3, help_text="Cost price at time of sale")
     returned_quantity = models.IntegerField(default=0, help_text="Quantity returned by customer")
+
+    # Override the default ORM manager
+    objects = InvoiceProductManager()
 
 
 class InvoiceCreditPayment(models.Model):
