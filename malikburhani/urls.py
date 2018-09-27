@@ -29,6 +29,7 @@ router.register(r'invoices', views.InvoiceViewSet, 'Invoice')
 router.register(r'payments', views.CreditPaymentsViewSet)
 router.register(r'sales/total', views.SalesTotalViewSet, 'Invoice')
 router.register(r'sales/category', views.SalesCategoryViewSet, 'InvoiceProduct')
+router.register(r'sales/source', views.SalesSourceViewSet, 'InvoiceProduct')
 
 urlpatterns = [
 	url(r'^api/v1/', include(router.urls)),
