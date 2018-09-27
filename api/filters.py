@@ -31,9 +31,9 @@ class SalesTotalFilter(filters.FilterSet):
         return queryset
 
 
-class SalesCategoryFilter(filters.FilterSet):
+class SalesCategorySourceFilter(filters.FilterSet):
     year = filters.NumberFilter(method='filter_year')
-    category = filters.NumberFilter(method='filter_category')
+    requested_type = filters.NumberFilter(method='filter_requested_type')
 
     class Meta:
         model = database.models.InvoiceProduct
@@ -45,26 +45,7 @@ class SalesCategoryFilter(filters.FilterSet):
             queryset = queryset.filter(year=value)
         return queryset
 
-    def filter_category(self, queryset, name, value):
+    def filter_requested_type(self, queryset, name, value):
         if value:
-            queryset = queryset.filter(category=value)
-        return queryset
-
-class SalesSourceFilter(filters.FilterSet):
-    year = filters.NumberFilter(method='filter_year')
-    source = filters.NumberFilter(method='filter_source')
-
-    class Meta:
-        model = database.models.InvoiceProduct
-        # Exclude all fields from InvoiceProduct model
-        exclude = ('id', 'invoice', 'product', 'quantity', 'sell_price', 'cost_price', 'returned_quantity')
-
-    def filter_year(self, queryset, name, value):
-        if value:
-            queryset = queryset.filter(year=value)
-        return queryset
-
-    def filter_source(self, queryset, name, value):
-        if value:
-            queryset = queryset.filter(source=value)
+            queryset = queryset.filter(requested_type=value)
         return queryset

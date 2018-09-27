@@ -3,6 +3,7 @@ from .serializers import *
 
 from django.db import models
 from rest_framework import viewsets
+from rest_framework.exceptions import ParseError
 from rest_framework.filters import OrderingFilter
 from django_filters import rest_framework as filters
 
@@ -78,13 +79,18 @@ class SalesTotalViewSet(viewsets.ModelViewSet):
                                                   .order_by('year', 'month')
         return queryset
 
-class SalesCategoryViewSet(viewsets.ModelViewSet):
-    serializer_class = SalesCategorySerializer
-    filterset_class = SalesCategoryFilter
+class SalesCategorySourceViewSet(viewsets.ModelViewSet):
+    serializer_class = SalesCategorySourceSerializer
+    filterset_class = SalesCategorySourceFilter
 
     def get_queryset(self):
+        request_type = self.request.query_params.get("type");
+
+        if request_type not in ["category", "source"]:
+            raise ParseError("Type must be either 'category' or 'source'")
+
         queryset = database.models.InvoiceProduct.objects.totals().select_related('product', 'invoice')\
-                        .annotate(credit=F('invoice__credit'), category=F('product__category'),
+                        .annotate(credit=F('invoice__credit'), requested_type=F('product__' + request_type),
                                   month=ExtractMonth(F('invoice__date_of_sale')), year=ExtractYear(F('invoice__date_of_sale')))\
                         .annotate(cratio=Coalesce(F('payments_total') / F('invoice_total'), 0.0))\
                         .annotate(product_sales=ExpressionWrapper((F('quantity') - F('returned_quantity')) * F('sell_price'),
@@ -95,31 +101,8 @@ class SalesCategoryViewSet(viewsets.ModelViewSet):
                                                 output_field=models.DecimalField(max_digits=15, decimal_places=3))))\
                         .annotate(_profit=Sum(Case(When(credit=True, then=F('product_profit') * F('cratio')), default='product_profit',
                                                 output_field=models.DecimalField(max_digits=15, decimal_places=3))))\
-                        .values('category', 'year', 'month', '_sales', '_profit')\
+                        .values('requested_type', 'year', 'month', '_sales', '_profit')\
                         .annotate(sales=F('_sales'), profit=F('_profit'))\
-                        .values('category', 'year', 'month', 'sales', 'profit')\
-                        .order_by('year', 'month', 'category')
-        return queryset
-
-class SalesSourceViewSet(viewsets.ModelViewSet):
-    serializer_class = SalesSourceSerializer
-    filterset_class = SalesSourceFilter
-
-    def get_queryset(self):
-        queryset = database.models.InvoiceProduct.objects.totals().select_related('product', 'invoice')\
-                        .annotate(credit=F('invoice__credit'), source=F('product__source'),
-                                  month=ExtractMonth(F('invoice__date_of_sale')), year=ExtractYear(F('invoice__date_of_sale')))\
-                        .annotate(cratio=Coalesce(F('payments_total') / F('invoice_total'), 0.0))\
-                        .annotate(product_sales=ExpressionWrapper((F('quantity') - F('returned_quantity')) * F('sell_price'),
-                                                                    output_field=models.DecimalField(max_digits=15, decimal_places=3)))\
-                        .annotate(product_profit=ExpressionWrapper((F('quantity') - F('returned_quantity')) * (F('sell_price') - F('cost_price')),
-                                                                    output_field=models.DecimalField(max_digits=15, decimal_places=3)))\
-                        .annotate(_sales=Sum(Case(When(credit=True, then=F('product_sales') * F('cratio')), default='product_sales',
-                                                output_field=models.DecimalField(max_digits=15, decimal_places=3))))\
-                        .annotate(_profit=Sum(Case(When(credit=True, then=F('product_profit') * F('cratio')), default='product_profit',
-                                                output_field=models.DecimalField(max_digits=15, decimal_places=3))))\
-                        .values('source', 'year', 'month', '_sales', '_profit')\
-                        .annotate(sales=F('_sales'), profit=F('_profit'))\
-                        .values('source', 'year', 'month', 'sales', 'profit')\
-                        .order_by('year', 'month', 'source')
+                        .values('requested_type', 'year', 'month', 'sales', 'profit')\
+                        .order_by('year', 'month', 'requested_type')
         return queryset

@@ -135,18 +135,10 @@ class SalesTotalSerializer(serializers.Serializer):
     profit = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
 
 
-# Category sales
-class SalesCategorySerializer(serializers.Serializer):
+# Category and source sales
+class SalesCategorySourceSerializer(serializers.Serializer):
     year = serializers.IntegerField(read_only=True)
     month = serializers.IntegerField(read_only=True)
-    category = serializers.IntegerField(read_only=True)
-    sales = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
-    profit = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
-
-# Source sales
-class SalesSourceSerializer(serializers.Serializer):
-    year = serializers.IntegerField(read_only=True)
-    month = serializers.IntegerField(read_only=True)
-    source = serializers.IntegerField(read_only=True)
+    requested_type = serializers.IntegerField(read_only=True)
     sales = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
     profit = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
