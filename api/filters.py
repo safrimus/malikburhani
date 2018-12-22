@@ -4,8 +4,8 @@ import database.models
 
 
 class InvoiceFilter(filters.FilterSet):
-    product_name = filters.CharFilter(field_name='products__product__name', distinct=True, lookup_expr='icontains')
-    customer_name = filters.CharFilter(field_name='customer__name', distinct=True, lookup_expr='icontains')
+    product_name = filters.CharFilter(field_name='products__product__name', distinct=True, lookup_expr='istartswith')
+    customer_name = filters.CharFilter(field_name='customer__name', distinct=True, lookup_expr='istartswith')
 
     class Meta:
         model = database.models.Invoice
