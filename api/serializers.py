@@ -2,6 +2,8 @@ from rest_framework import serializers
 from drf_queryfields import QueryFieldsMixin
 from django.db.models import Sum, F, DecimalField
 
+import decimal
+
 import database.models as models
 
 
@@ -54,6 +56,21 @@ class InvoiceCreditPaymentSerializer(serializers.ModelSerializer):
         model = models.InvoiceCreditPayment
         fields = ('invoice', 'payment', 'date_of_payment',)
 
+    def validate(self, data):
+        invoice = data["invoice"]
+        current_payments = invoice.payments_total if invoice.payments_total else decimal.Decimal(0.0)
+
+        if not invoice.credit:
+            raise serializers.ValidationError("Invoice {0} is not a credit invoice.".format(invoice.id))
+
+        if current_payments >= invoice.invoice_total:
+            raise serializers.ValidationError("Invoice {0} is already fully paid.".format(invoice.id))
+
+        max_payment = invoice.invoice_total - current_payments
+        if decimal.Decimal(data["payment"]) > max_payment:
+            raise serializers.ValidationError("Payment must be less than or equal to {0}.".format(max_payment))
+
+        return data
 
 # Invoice
 class InvoiceProductSerializer(serializers.ModelSerializer):
@@ -81,18 +98,18 @@ class InvoiceSerializer(QueryFieldsMixin, serializers.ModelSerializer):
         products = data["products"]
 
         if not products:
-            raise serializers.ValidationError("no products in invoice")
+            raise serializers.ValidationError("no products in invoice.")
 
         for product in products:
             try:
                 if product["sell_price"] <= 0.0 or product["quantity"] <= 0:
-                    raise serializers.ValidationError("Sell price and quantity must be greater than 0")
+                    raise serializers.ValidationError("Sell price and quantity must be greater than 0.")
             except KeyError:
                 pass
 
             try:
                 if product["returned_quantity"] > product["quantity"]:
-                    raise serializers.ValidationError("Return quantity must be less than quantity sold")
+                    raise serializers.ValidationError("Return quantity must be less than quantity sold.")
             except KeyError:
                 pass
 
