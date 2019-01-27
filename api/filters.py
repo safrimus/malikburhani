@@ -3,6 +3,9 @@ from django_filters import rest_framework as filters
 import database.models
 
 
+class NumberInFilter(filters.BaseInFilter, filters.NumberFilter):
+    pass
+
 class InvoiceFilter(filters.FilterSet):
     product_name = filters.CharFilter(field_name='products__product__name', distinct=True, lookup_expr='istartswith')
     customer_name = filters.CharFilter(field_name='customer__name', distinct=True, lookup_expr='istartswith')
@@ -18,7 +21,7 @@ class InvoiceFilter(filters.FilterSet):
 
 
 class SalesTotalFilter(filters.FilterSet):
-    year = filters.NumberFilter(method='filter_year')
+    year = NumberInFilter(method='filter_year')
 
     class Meta:
         model = database.models.Invoice
@@ -27,7 +30,7 @@ class SalesTotalFilter(filters.FilterSet):
 
     def filter_year(self, queryset, name, value):
         if value:
-            queryset = queryset.filter(year=value)
+            queryset = queryset.filter(year__in=value)
         return queryset
 
 
