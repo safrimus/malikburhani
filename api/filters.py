@@ -35,7 +35,7 @@ class SalesTotalFilter(filters.FilterSet):
 
 
 class SalesCategorySourceFilter(filters.FilterSet):
-    year = filters.NumberFilter(method='filter_year')
+    year = NumberInFilter(method='filter_year')
     requested_type = filters.NumberFilter(method='filter_requested_type')
 
     class Meta:
@@ -45,7 +45,7 @@ class SalesCategorySourceFilter(filters.FilterSet):
 
     def filter_year(self, queryset, name, value):
         if value:
-            queryset = queryset.filter(year=value)
+            queryset = queryset.filter(year__in=value)
         return queryset
 
     def filter_requested_type(self, queryset, name, value):
