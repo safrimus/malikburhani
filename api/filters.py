@@ -1,3 +1,5 @@
+from django.db.models import F
+from django.db.models.functions import Coalesce
 from django_filters import rest_framework as filters
 
 import database.models
@@ -7,6 +9,7 @@ class NumberInFilter(filters.BaseInFilter, filters.NumberFilter):
     pass
 
 class InvoiceFilter(filters.FilterSet):
+    unpaid_invoices = filters.BooleanFilter(method='filter_unpaid_invoices')
     product_name = filters.CharFilter(field_name='products__product__name', distinct=True, lookup_expr='istartswith')
     customer_name = filters.CharFilter(field_name='customer__name', distinct=True, lookup_expr='istartswith')
 
@@ -18,6 +21,11 @@ class InvoiceFilter(filters.FilterSet):
             'credit': ['exact',],
             'id': ['exact',],
         }
+
+    def filter_unpaid_invoices(self, queryset, name, value):
+        if value:
+            queryset = queryset.filter(invoice_total__gt=Coalesce(F('payments_total'), 0.0))
+        return queryset
 
 
 class SalesTotalFilter(filters.FilterSet):
