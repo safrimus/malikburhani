@@ -8,6 +8,16 @@ import database.models
 class NumberInFilter(filters.BaseInFilter, filters.NumberFilter):
     pass
 
+class ProductFilter(filters.FilterSet):
+    name = filters.CharFilter(field_name='name', distinct=True, lookup_expr='istartswith')
+
+    class Meta:
+        model = database.models.Product
+        fields = {
+            'hide_product': ['exact',],
+            'supplier': ['exact',],
+        }
+
 class InvoiceFilter(filters.FilterSet):
     unpaid_invoices = filters.BooleanFilter(method='filter_unpaid_invoices')
     product_name = filters.CharFilter(field_name='products__product__name', distinct=True, lookup_expr='istartswith')

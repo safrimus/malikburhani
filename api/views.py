@@ -38,8 +38,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = database.models.Product.objects.all()
     serializer_class = ProductSerializer
     filter_backends = (filters.DjangoFilterBackend, OrderingFilter,)
-    filterset_fields = ('hide_product', 'supplier')
-    ordering_fileds = ('name_sort',)
+    filterset_class = ProductFilter
+    ordering_fields = ('name_sort',)
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
