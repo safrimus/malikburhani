@@ -8,6 +8,7 @@ import database.models
 class NumberInFilter(filters.BaseInFilter, filters.NumberFilter):
     pass
 
+
 class ProductFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', distinct=True, lookup_expr='istartswith')
 
@@ -17,6 +18,7 @@ class ProductFilter(filters.FilterSet):
             'hide_product': ['exact',],
             'supplier': ['exact',],
         }
+
 
 class InvoiceFilter(filters.FilterSet):
     unpaid_invoices = filters.BooleanFilter(method='filter_unpaid_invoices')

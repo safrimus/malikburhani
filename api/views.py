@@ -39,7 +39,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     filter_backends = (filters.DjangoFilterBackend, OrderingFilter,)
     filterset_class = ProductFilter
-    ordering_fields = ('name_sort',)
+    ordering_fields = ('name_sort', 'description_sort', 'size_sort')
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
