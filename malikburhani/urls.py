@@ -27,7 +27,7 @@ router.register(r'categories', views.CategoryViewSet)
 router.register(r'products', views.ProductViewSet)
 router.register(r'payments', views.CreditPaymentsViewSet)
 router.register(r'invoices', views.InvoiceViewSet, 'Invoice')
-router.register(r'export/stock', views.StockXlsViewSet, 'Product')
+router.register(r'external/stock', views.StockXlsViewSet, 'Product')
 router.register(r'sales/total', views.SalesTotalViewSet, 'Invoice')
 router.register(r'sales/category_source', views.SalesCategorySourceViewSet, 'InvoiceProduct')
 

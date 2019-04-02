@@ -2,6 +2,7 @@ from .filters import *
 from .serializers import *
 
 import xlwt
+import xlrd
 import datetime
 
 from rest_framework import viewsets
@@ -9,8 +10,8 @@ from rest_framework.exceptions import ParseError
 from rest_framework.filters import OrderingFilter
 from django_filters import rest_framework as filters
 
-from django.db import models
-from django.http import HttpResponse
+from django.db import models, transaction
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.db.models import Sum, ExpressionWrapper, F, Case, When
 from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 
@@ -112,7 +113,9 @@ class SalesCategorySourceViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class StockXlsViewSet(viewsets.ViewSet):
+class StockXlsViewSet(viewsets.ModelViewSet):
+    http_method_names = ('get', 'post')
+
     def list(self, request):
         now = datetime.datetime.now()
         response = HttpResponse(content_type='application/ms-excel')
@@ -152,3 +155,47 @@ class StockXlsViewSet(viewsets.ViewSet):
 
         wb.save(response)
         return response
+
+    def create(self, request):
+        file = request.FILES.get('file', None)
+
+        if not file:
+            HttpResponseBadRequest("No file received")
+
+        wb = xlrd.open_workbook(file_contents=file.read())
+        sheet = wb.sheet_by_index(0);
+
+        # Get the first row of the table and the columns indices we want to update
+        cols = dict()
+        start_row = 0
+        for row in range(sheet.nrows):
+            if sheet.cell(row, 0).value == "ID":
+                start_row = row + 1
+
+                for col in range(sheet.ncols):
+                    if sheet.cell(row, col).value in ["Stock", "Cost Price", "Sell Price"]:
+                        cols[sheet.cell(row, col).value] = col
+
+                if not cols:
+                    HttpResponseBadRequest("Table must have at least one of 'Stock', 'Sell Price' or 'Cost Price' \
+                                            as columns")
+
+                break
+        else:
+            return HttpResponseBadRequest("'ID' column not found in spreadsheet")
+
+
+        # Update the products
+        with transaction.atomic():
+            for row in range(start_row, sheet.nrows):
+                try:
+                    product = database.models.Product.objects.get(id=sheet.cell(row, 0).value)
+                except database.models.Product.DoesNotExist:
+                    continue
+
+                for col_name, col in cols.items():
+                    field = col_name.lower().replace(' ', '_')
+                    setattr(product, field, sheet.cell(row, col).value)
+                    product.save()
+
+        return HttpResponse()
