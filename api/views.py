@@ -196,6 +196,7 @@ class StockXlsViewSet(viewsets.ModelViewSet):
                 for col_name, col in cols.items():
                     field = col_name.lower().replace(' ', '_')
                     setattr(product, field, sheet.cell(row, col).value)
-                    product.save()
+
+                product.save()
 
         return HttpResponse()
