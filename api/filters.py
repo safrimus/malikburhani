@@ -22,6 +22,7 @@ class ProductFilter(filters.FilterSet):
 
 class InvoiceFilter(filters.FilterSet):
     unpaid_invoices = filters.BooleanFilter(method='filter_unpaid_invoices')
+    last_invoice_only = filters.BooleanFilter(method='filter_last_invoice')
     product_name = filters.CharFilter(field_name='products__product__name', distinct=True, lookup_expr='istartswith')
     customer_name = filters.CharFilter(field_name='customer__name', distinct=True, lookup_expr='istartswith')
 
@@ -37,6 +38,12 @@ class InvoiceFilter(filters.FilterSet):
     def filter_unpaid_invoices(self, queryset, name, value):
         if value:
             queryset = queryset.filter(invoice_total__gt=Coalesce(F('payments_total'), 0.0))
+        return queryset
+
+    def filter_last_invoice(self, queryset, name, value):
+        if value:
+            last_id = queryset.latest('id').id
+            queryset = queryset.filter(id=last_id)
         return queryset
 
 
