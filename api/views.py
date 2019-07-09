@@ -1,8 +1,13 @@
 from .filters import *
 from .serializers import *
 
+import io
+import os
+import json
 import xlwt
 import xlrd
+import tarfile
+import tempfile
 import datetime
 
 from rest_framework import viewsets
@@ -11,7 +16,8 @@ from rest_framework.filters import OrderingFilter
 from django_filters import rest_framework as filters
 
 from django.db import models, transaction
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.core import management
+from django.http import HttpResponse, HttpResponseBadRequest, FileResponse
 from django.db.models import Sum, ExpressionWrapper, F, Case, When
 from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
 
@@ -113,13 +119,94 @@ class SalesCategorySourceViewSet(viewsets.ModelViewSet):
         return queryset
 
 
+class BackupDbViewSet(viewsets.ModelViewSet):
+    http_method_names = ('get')
+
+    def list(self, request):
+        response = tempfile.NamedTemporaryFile(delete=False)
+        archive = tarfile.open(fileobj=response, mode='w')
+
+        fixtures = [('database.Category', 'categories.json'), ('database.Source', 'sources.json'),
+                    ('database.Supplier', 'suppliers.json'), ('database.Product', 'products.json'),
+                    ('database.Customer', 'customers.json'), ('database.Invoice', 'invoices.json'),
+                    ('database.InvoiceProduct', 'invoice_products.json'),
+                    ('database.InvoiceCreditPayment', 'payments.json')]
+
+        for fixture, filename in fixtures:
+            buf = io.StringIO()
+            management.call_command('dumpdata', fixture, indent=2, format='json', stdout=buf)
+            buf.seek(0)
+            tarinfo = tarfile.TarInfo(name=filename)
+            tarinfo.size = len(buf.getvalue())
+            archive.addfile(tarinfo, fileobj=io.BytesIO(buf.getvalue().encode('utf-8')))
+            buf.close()
+
+        archive.close()
+
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
+        filename = "backup_{}.tar.gz".format(today)
+        return FileResponse(open(response.name, 'rb'), filename=filename, as_attachment=True)
+
+
+class RestoreDbViewSet(viewsets.ModelViewSet):
+    http_method_names = ('post')
+
+    def create(self, request):
+        file = request.FILES.get('file', None)
+
+        if not file:
+            return HttpResponseBadRequest("No file received")
+
+        try:
+            archive = tarfile.open(fileobj=file, mode='r')
+        except tarfile.ReadError as e:
+            return HttpResponseBadRequest("File is not a .tar.gz file")
+
+        # Verify we have all the right files
+        expected = ['categories.json', 'sources.json', 'suppliers.json', 'products.json', 'customers.json',
+                    'invoices.json', 'invoice_products.json', 'payments.json']
+        for fixture in archive.getnames():
+            if fixture in expected:
+                expected.remove(fixture)
+            else:
+                return HttpResponseBadRequest("Unexpected file '{0}'".format(fixture))
+        if expected:
+            return HttpResponseBadRequest("Missing files: {0}".format(','.join(expected)))
+
+        # Convert binary files to json which also verifies if the files are valid json
+        fixtures_json = []
+        for fixture in archive.getnames():
+            file = archive.extractfile(fixture)
+
+            try:
+                file_dict = json.loads(file.read().decode('utf-8'))
+            except json.decoder.JSONDecodeError:
+                return HttpResponseBadRequest("File {0} may be corrupted".format(fixture))
+
+            fixtures_json.append(file_dict)
+
+        # Flush db
+        management.call_command('flush', verbosity=0, interactive=False)
+
+        # Load data into db
+        for fixture in fixtures_json:
+            temp = tempfile.NamedTemporaryFile(delete=False)
+            with open(temp.name, mode='w') as f:
+                json.dump(fixture, f)
+
+            os.rename(temp.name, "{0}.json".format(temp.name))
+            management.call_command('loaddata', temp.name, verbosity=0)
+
+        return HttpResponse()
+
+
 class StockXlsViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post')
 
     def list(self, request):
-        now = datetime.datetime.now()
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
         response = HttpResponse(content_type='application/ms-excel')
-        response['Content-Disposition'] = "attachment; filename=stock-{0}.xls".format(now.strftime("%Y-%m-%d"))
+        response['Content-Disposition'] = "attachment; filename=stock-{0}.xls".format(today)
 
         wb = xlwt.Workbook(encoding='utf-8')
         ws = wb.add_sheet('Stock')
@@ -136,7 +223,7 @@ class StockXlsViewSet(viewsets.ModelViewSet):
         for col_num in range(len(columns)):
             ws.write(row_num, col_num, columns[col_num], font_style)
 
-        #Sheet body, remaining rows
+        # Sheet body, remaining rows
         font_style = xlwt.XFStyle()
 
         hide_product = request.query_params.get("hide_product");
@@ -160,7 +247,7 @@ class StockXlsViewSet(viewsets.ModelViewSet):
         file = request.FILES.get('file', None)
 
         if not file:
-            HttpResponseBadRequest("No file received")
+            return HttpResponseBadRequest("No file received")
 
         wb = xlrd.open_workbook(file_contents=file.read())
         sheet = wb.sheet_by_index(0);
@@ -177,8 +264,8 @@ class StockXlsViewSet(viewsets.ModelViewSet):
                         cols[sheet.cell(row, col).value] = col
 
                 if not cols:
-                    HttpResponseBadRequest("Table must have at least one of 'Stock', 'Sell Price' or 'Cost Price' \
-                                            as columns")
+                    return HttpResponseBadRequest("Table must have at least one of 'Stock', 'Sell Price' or \
+                                                  'Cost Price' as columns")
 
                 break
         else:
