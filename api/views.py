@@ -3,6 +3,7 @@ from .serializers import *
 
 import io
 import os
+import sys
 import json
 import xlwt
 import xlrd
@@ -189,15 +190,21 @@ class RestoreDbViewSet(viewsets.ModelViewSet):
         management.call_command('flush', verbosity=0, interactive=False)
 
         # Load data into db
+        response = ""
         for fixture in fixtures_json:
             temp = tempfile.NamedTemporaryFile(delete=False)
             with open(temp.name, mode='w') as f:
                 json.dump(fixture, f)
 
+            output = io.StringIO()
             os.rename(temp.name, "{0}.json".format(temp.name))
-            management.call_command('loaddata', temp.name, verbosity=0)
+            management.call_command('loaddata', temp.name, stdout=output)
 
-        return HttpResponse()
+            objects_restored = output.getvalue().split(' ')[1]
+            fixture_name = fixture[0]["model"].split('.')[1].lower()
+            response += "\n" + "Restored {0} {1} items".format(objects_restored, fixture_name)
+
+        return HttpResponse(response)
 
 
 class StockXlsViewSet(viewsets.ModelViewSet):
@@ -270,7 +277,6 @@ class StockXlsViewSet(viewsets.ModelViewSet):
                 break
         else:
             return HttpResponseBadRequest("'ID' column not found in spreadsheet")
-
 
         # Update the products
         with transaction.atomic():
