@@ -32,6 +32,8 @@ router.register(r'external/restore_db', views.RestoreDbViewSet, 'Product')
 router.register(r'external/stock', views.StockXlsViewSet, 'Product')
 router.register(r'sales/total', views.SalesTotalViewSet, 'Invoice')
 router.register(r'sales/category_source', views.SalesCategorySourceViewSet, 'InvoiceProduct')
+router.register(r'sales/products', views.SalesProductsViewSet, 'InvoiceProduct')
+
 
 urlpatterns = [
 	url(r'^api/v1/', include(router.urls)),

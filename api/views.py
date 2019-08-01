@@ -69,9 +69,74 @@ class CreditPaymentsViewSet(viewsets.ModelViewSet):
     filterset_fields = ('invoice',)
 
 
+class SalesProductsViewSet(viewsets.ModelViewSet):
+    serializer_class = SalesProductsSerializer
+    http_method_names = ('get')
+
+    def get_object(self, queryset=None):
+        if self.request.query_params.get("id"):
+            if queryset is None:
+                queryset = self.get_queryset()
+
+            return queryset.aggregate(units=Sum('quantity'), sales=Sum('_sales'), profit=Sum('_profit'))
+        else:
+            return super(SalesProductsViewSet, self).get_object()
+
+    def get_queryset(self):
+        year = self.request.query_params.get("year")
+        month = self.request.query_params.get("month")
+        product_id = self.request.query_params.get("id")
+        date_end = self.request.query_params.get("date_end")
+        date_start = self.request.query_params.get("date_start")
+        group_by_customers = self.request.query_params.get("customers")
+
+        queryset = None
+        if product_id:
+            queryset = database.models.InvoiceProduct.objects.totals().select_related('invoice').filter(product=product_id)
+        elif group_by_customers:
+            raise ParseError("Provide product ID to group by customers")
+        else:
+            queryset = database.models.InvoiceProduct.objects.totals().select_related('invoice')
+
+        if month:
+            if not year:
+                raise ParseError("Provide year for month {0}".format(month))
+            queryset = queryset.filter(invoice__date_of_sale__month=month, invoice__date_of_sale__year=year)
+        elif year:
+            queryset = queryset.filter(invoice__date_of_sale__year=year)
+        elif date_start and date_end:
+            queryset = queryset.filter(invoice__date_of_sale__range=(date_start, date_end))
+        else:
+            raise ParseError("Must provide a month, year or custom date range")
+
+        queryset = queryset.annotate(credit=F('invoice__credit'), customer=F('invoice__customer'))\
+                           .annotate(cratio=Coalesce(F('payments_total') / F('invoice_total'), 0.0))\
+                           .annotate(product_sales=ExpressionWrapper((F('quantity') - F('returned_quantity')) * F('sell_price'),
+                                                        output_field=models.DecimalField(max_digits=15, decimal_places=3)))\
+                           .annotate(product_profit=ExpressionWrapper((F('quantity') - F('returned_quantity')) * (F('sell_price') - F('cost_price')),
+                                                          output_field=models.DecimalField(max_digits=15, decimal_places=3)))\
+                           .annotate(_sales=Sum(Case(When(credit=True, then=F('product_sales') * F('cratio')), default='product_sales',
+                                                output_field=models.DecimalField(max_digits=15, decimal_places=3))))\
+                           .annotate(_profit=Sum(Case(When(credit=True, then=F('product_profit') * F('cratio')), default='product_profit',
+                                                output_field=models.DecimalField(max_digits=15, decimal_places=3))))
+
+        if group_by_customers:
+            queryset = queryset.values('customer')\
+                               .annotate(sales=F('_sales'), profit=F('_profit'), units=Sum('quantity'))\
+                               .order_by('customer')
+        else:
+            # Group by product
+            queryset = queryset.values('product')\
+                               .annotate(sales=F('_sales'), profit=F('_profit'), units=Sum('quantity'))\
+                               .order_by('product')
+
+        return queryset
+
+
 class SalesTotalViewSet(viewsets.ModelViewSet):
     serializer_class = SalesTotalSerializer
     filterset_class = SalesTotalFilter
+    http_method_names = ('get')
 
     def get_queryset(self):
         queryset = database.models.Invoice.objects.annotate(month=ExtractMonth('date_of_sale'), year=ExtractYear('date_of_sale'))\
@@ -94,6 +159,7 @@ class SalesTotalViewSet(viewsets.ModelViewSet):
 class SalesCategorySourceViewSet(viewsets.ModelViewSet):
     serializer_class = SalesCategorySourceSerializer
     filterset_class = SalesCategorySourceFilter
+    http_method_names = ('get')
 
     def get_queryset(self):
         request_type = self.request.query_params.get("type");

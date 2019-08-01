@@ -159,3 +159,12 @@ class SalesCategorySourceSerializer(serializers.Serializer):
     requested_type = serializers.IntegerField(read_only=True)
     sales = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
     profit = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
+
+
+# Product sales total
+class SalesProductsSerializer(serializers.Serializer):
+    sales = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
+    profit = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
+    units = serializers.IntegerField(read_only=True)
+    product = serializers.IntegerField(read_only=True, required=False, allow_null=True)
+    customer = serializers.IntegerField(read_only=True, required=False, allow_null=True)
