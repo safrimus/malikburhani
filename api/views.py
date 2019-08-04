@@ -20,7 +20,7 @@ from django.db import models, transaction
 from django.core import management
 from django.http import HttpResponse, HttpResponseBadRequest, FileResponse
 from django.db.models import Sum, ExpressionWrapper, F, Case, When
-from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear
+from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear, ExtractDay
 
 import database.models
 
@@ -85,19 +85,28 @@ class SalesProductsViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         year = self.request.query_params.get("year")
         month = self.request.query_params.get("month")
-        product_id = self.request.query_params.get("id")
+        product = self.request.query_params.get("id")
+        group_by = self.request.query_params.get("group_by", "product")
         date_end = self.request.query_params.get("date_end")
         date_start = self.request.query_params.get("date_start")
-        group_by_customers = self.request.query_params.get("customers")
 
-        queryset = None
-        if product_id:
-            queryset = database.models.InvoiceProduct.objects.totals().select_related('invoice').filter(product=product_id)
-        elif group_by_customers:
+        # Format group_by param into list
+        group_by_params = []
+        for param in group_by.split(','):
+            group_by_params.append(param.strip())
+
+        # Validate group_by params
+        if "customer" in group_by_params and not product:
             raise ParseError("Provide product ID to group by customers")
-        else:
-            queryset = database.models.InvoiceProduct.objects.totals().select_related('invoice')
 
+        # Initial queryset
+        queryset = database.models.InvoiceProduct.objects.totals().select_related('invoice')
+
+        # Handle product filter
+        if product:
+            queryset = queryset.filter(product=product)
+
+        # Handle date range filters
         if month:
             if not year:
                 raise ParseError("Provide year for month {0}".format(month))
@@ -110,6 +119,8 @@ class SalesProductsViewSet(viewsets.ModelViewSet):
             raise ParseError("Must provide a month, year or custom date range")
 
         queryset = queryset.annotate(credit=F('invoice__credit'), customer=F('invoice__customer'))\
+                           .annotate(month=ExtractMonth('invoice__date_of_sale'), year=ExtractYear('invoice__date_of_sale'),
+                                     day=ExtractDay('invoice__date_of_sale'))\
                            .annotate(cratio=Coalesce(F('payments_total') / F('invoice_total'), 0.0))\
                            .annotate(product_sales=ExpressionWrapper((F('quantity') - F('returned_quantity')) * F('sell_price'),
                                                         output_field=models.DecimalField(max_digits=15, decimal_places=3)))\
@@ -118,17 +129,10 @@ class SalesProductsViewSet(viewsets.ModelViewSet):
                            .annotate(_sales=Sum(Case(When(credit=True, then=F('product_sales') * F('cratio')), default='product_sales',
                                                 output_field=models.DecimalField(max_digits=15, decimal_places=3))))\
                            .annotate(_profit=Sum(Case(When(credit=True, then=F('product_profit') * F('cratio')), default='product_profit',
-                                                output_field=models.DecimalField(max_digits=15, decimal_places=3))))
-
-        if group_by_customers:
-            queryset = queryset.values('customer')\
-                               .annotate(sales=F('_sales'), profit=F('_profit'), units=Sum('quantity'))\
-                               .order_by('customer')
-        else:
-            # Group by product
-            queryset = queryset.values('product')\
-                               .annotate(sales=F('_sales'), profit=F('_profit'), units=Sum('quantity'))\
-                               .order_by('product')
+                                                output_field=models.DecimalField(max_digits=15, decimal_places=3))))\
+                           .values(*group_by_params)\
+                           .annotate(sales=F('_sales'), profit=F('_profit'), units=Sum(F('quantity') - F('returned_quantity')))\
+                           .order_by(*group_by_params)
 
         return queryset
 
@@ -139,20 +143,16 @@ class SalesTotalViewSet(viewsets.ModelViewSet):
     http_method_names = ('get')
 
     def get_queryset(self):
-        queryset = database.models.Invoice.objects.annotate(month=ExtractMonth('date_of_sale'), year=ExtractYear('date_of_sale'))\
-                                                  .annotate(cratio=Coalesce(F('payments_total') / F('invoice_total'), 0.0))\
-                                                  .annotate(_sales=Sum(Case(
-                                                                When(credit=True, then=Coalesce(F('payments_total'), 0.0)),
-                                                                default='invoice_total',
-                                                            )))\
-                                                  .annotate(_profit=Sum(Case(
-                                                                When(credit=True, then=F('profit_total') * F('cratio')),
-                                                                default='profit_total',
-                                                            )))\
-                                                  .values('year', 'month', '_sales', '_profit')\
-                                                  .annotate(sales=F('_sales'), profit=F('_profit'))\
-                                                  .values('year', 'month', 'sales', 'profit')\
-                                                  .order_by('year', 'month')
+        queryset = database.models.Invoice.objects
+        queryset = queryset.annotate(month=ExtractMonth('date_of_sale'), year=ExtractYear('date_of_sale'))\
+                           .annotate(cratio=Coalesce(F('payments_total') / F('invoice_total'), 0.0))\
+                           .annotate(_sales=Sum(Case(When(credit=True, then=Coalesce(F('payments_total'), 0.0)),
+                                                          default='invoice_total')))\
+                           .annotate(_profit=Sum(Case(When(credit=True, then=F('profit_total') * F('cratio')),
+                                                           default='profit_total')))\
+                           .values('year', 'month')\
+                           .annotate(sales=F('_sales'), profit=F('_profit'))\
+                           .order_by('year', 'month')
         return queryset
 
 
@@ -179,9 +179,8 @@ class SalesCategorySourceViewSet(viewsets.ModelViewSet):
                                                 output_field=models.DecimalField(max_digits=15, decimal_places=3))))\
                         .annotate(_profit=Sum(Case(When(credit=True, then=F('product_profit') * F('cratio')), default='product_profit',
                                                 output_field=models.DecimalField(max_digits=15, decimal_places=3))))\
-                        .values('requested_type', 'year', 'month', '_sales', '_profit')\
+                        .values('year', 'month', 'requested_type')\
                         .annotate(sales=F('_sales'), profit=F('_profit'))\
-                        .values('requested_type', 'year', 'month', 'sales', 'profit')\
                         .order_by('year', 'month', 'requested_type')
         return queryset
 
@@ -191,7 +190,7 @@ class BackupDbViewSet(viewsets.ModelViewSet):
 
     def list(self, request):
         response = tempfile.NamedTemporaryFile(delete=False)
-        archive = tarfile.open(fileobj=response, mode='w')
+        archive = tarfile.open(fileobj=response, mode='w:gz')
 
         fixtures = [('database.Category', 'categories.json'), ('database.Source', 'sources.json'),
                     ('database.Supplier', 'suppliers.json'), ('database.Product', 'products.json'),
@@ -218,6 +217,9 @@ class BackupDbViewSet(viewsets.ModelViewSet):
 class RestoreDbViewSet(viewsets.ModelViewSet):
     http_method_names = ('post')
 
+    FIXTURES = ["customers.json", "categories.json", "sources.json", "suppliers.json", "products.json",
+                "invoices.json", "invoice_products.json", "payments.json"]
+
     def create(self, request):
         file = request.FILES.get('file', None)
 
@@ -230,8 +232,7 @@ class RestoreDbViewSet(viewsets.ModelViewSet):
             return HttpResponseBadRequest("File is not a .tar.gz file")
 
         # Verify we have all the right files
-        expected = ['categories.json', 'sources.json', 'suppliers.json', 'products.json', 'customers.json',
-                    'invoices.json', 'invoice_products.json', 'payments.json']
+        expected = self.FIXTURES.copy()
         for fixture in archive.getnames():
             if fixture in expected:
                 expected.remove(fixture)
@@ -242,7 +243,7 @@ class RestoreDbViewSet(viewsets.ModelViewSet):
 
         # Convert binary files to json which also verifies if the files are valid json
         fixtures_json = []
-        for fixture in archive.getnames():
+        for fixture in self.FIXTURES:
             file = archive.extractfile(fixture)
 
             try:
