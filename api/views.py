@@ -85,26 +85,34 @@ class SalesProductsViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         year = self.request.query_params.get("year")
         month = self.request.query_params.get("month")
-        product = self.request.query_params.get("id")
-        group_by = self.request.query_params.get("group_by", "product")
+        products = self.request.query_params.get("id")
+        group_by = self.request.query_params.get("group_by")
         date_end = self.request.query_params.get("date_end")
         date_start = self.request.query_params.get("date_start")
 
+        # Format id param into list
+        product_ids = products.split(',') if products else []
+
         # Format group_by param into list
-        group_by_params = []
-        for param in group_by.split(','):
-            group_by_params.append(param.strip())
+        group_by_params = group_by.split(',') if group_by else []
 
         # Validate group_by params
-        if "customer" in group_by_params and not product:
+        if group_by_params and \
+           any(param not in ["product", "customer", "day", "month", "year"] for param in group_by_params):
+            raise ParseError("Can only group by product, customer, day, month or year")
+        if "customer" in group_by_params and not product_ids:
             raise ParseError("Provide product ID to group by customers")
+        if "day" in group_by_params and "month" not in group_by_params and not month:
+            raise ParseError("Must group by both day and month when filtering by year or custom dates")
+        if "month" in group_by_params and year and month:
+            raise ParseError("Can not group by month when filtering by month")
 
         # Initial queryset
         queryset = database.models.InvoiceProduct.objects.totals().select_related('invoice')
 
         # Handle product filter
-        if product:
-            queryset = queryset.filter(product=product)
+        if product_ids:
+            queryset = queryset.filter(product__in=product_ids)
 
         # Handle date range filters
         if month:
@@ -118,6 +126,7 @@ class SalesProductsViewSet(viewsets.ModelViewSet):
         else:
             raise ParseError("Must provide a month, year or custom date range")
 
+        # Do the query
         queryset = queryset.annotate(credit=F('invoice__credit'), customer=F('invoice__customer'))\
                            .annotate(month=ExtractMonth('invoice__date_of_sale'), year=ExtractYear('invoice__date_of_sale'),
                                      day=ExtractDay('invoice__date_of_sale'))\
