@@ -72,6 +72,7 @@ class InvoiceCreditPaymentSerializer(serializers.ModelSerializer):
 
         return data
 
+
 # Invoice
 class InvoiceProductSerializer(serializers.ModelSerializer):
 
@@ -144,21 +145,25 @@ class InvoiceSerializer(QueryFieldsMixin, serializers.ModelSerializer):
 
         return invoice
 
+
 # Sales total
 class SalesTotalSerializer(serializers.Serializer):
-    year = serializers.IntegerField(read_only=True)
-    month = serializers.IntegerField(read_only=True)
+    year = serializers.IntegerField(read_only=True, required=False)
+    month = serializers.IntegerField(read_only=True, required=False)
     sales = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
     profit = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
 
 
 # Category and source sales
 class SalesCategorySourceSerializer(serializers.Serializer):
-    year = serializers.IntegerField(read_only=True)
-    month = serializers.IntegerField(read_only=True)
     requested_type = serializers.IntegerField(read_only=True)
     sales = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
     profit = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
+    units = serializers.IntegerField(read_only=True)
+    customer = serializers.IntegerField(read_only=True, required=False)
+    year = serializers.IntegerField(read_only=True, required=False)
+    month = serializers.IntegerField(read_only=True, required=False)
+    day = serializers.IntegerField(read_only=True, required=False)
 
 
 # Product sales total
@@ -167,6 +172,29 @@ class SalesProductsSerializer(serializers.Serializer):
     profit = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
     units = serializers.IntegerField(read_only=True)
     product = serializers.IntegerField(read_only=True, required=False)
+    customer = serializers.IntegerField(read_only=True, required=False)
+    year = serializers.IntegerField(read_only=True, required=False)
+    month = serializers.IntegerField(read_only=True, required=False)
+    day = serializers.IntegerField(read_only=True, required=False)
+
+
+# Supplier sales total
+class SalesSuppliersSerializer(serializers.Serializer):
+    sales = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
+    profit = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
+    units = serializers.IntegerField(read_only=True)
+    supplier = serializers.IntegerField(read_only=True, required=False)
+    customer = serializers.IntegerField(read_only=True, required=False)
+    year = serializers.IntegerField(read_only=True, required=False)
+    month = serializers.IntegerField(read_only=True, required=False)
+    day = serializers.IntegerField(read_only=True, required=False)
+
+
+# Customer sales total
+class SalesCustomersSerializer(serializers.Serializer):
+    sales = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
+    profit = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
+    units = serializers.IntegerField(read_only=True)
     customer = serializers.IntegerField(read_only=True, required=False)
     year = serializers.IntegerField(read_only=True, required=False)
     month = serializers.IntegerField(read_only=True, required=False)

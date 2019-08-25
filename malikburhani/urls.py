@@ -33,6 +33,8 @@ router.register(r'external/stock', views.StockXlsViewSet, 'Product')
 router.register(r'sales/total', views.SalesTotalViewSet, 'Invoice')
 router.register(r'sales/category_source', views.SalesCategorySourceViewSet, 'InvoiceProduct')
 router.register(r'sales/products', views.SalesProductsViewSet, 'InvoiceProduct')
+router.register(r'sales/suppliers', views.SalesSuppliersViewSet, 'InvoiceProduct')
+router.register(r'sales/customers', views.SalesCustomersViewSet, 'InvoiceProduct')
 
 
 urlpatterns = [

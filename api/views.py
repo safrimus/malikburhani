@@ -25,6 +25,76 @@ from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear, Extr
 import database.models
 
 
+def sales_per_type(type_name, field_lookup, params):
+    ids = params.get("id");
+    year = params.get("year")
+    month = params.get("month")
+    group_by = params.get("group_by")
+    date_end = params.get("date_end")
+    date_start = params.get("date_start")
+
+    # Format id param into list
+    ids_list = ids.split(',') if ids else []
+
+    # Format group_by param into list
+    group_by_params = group_by.split(',') if group_by else [type_name]
+
+    # Validate group_by params
+    if group_by_params and \
+       any(param not in [type_name, "customer", "day", "month", "year"] for param in group_by_params):
+        raise ParseError("Can only group by {0}, customer, day, month or year".format(type_name))
+    if "customer" in group_by_params and not ids_list:
+        raise ParseError("Provide ID to group by customer")
+    if "day" in group_by_params and "month" not in group_by_params and not month:
+        raise ParseError("Must group by both day and month when filtering by year or custom dates")
+    if "month" in group_by_params and year and month:
+        raise ParseError("Can not group by month when filtering by month")
+
+    # Initial queryset
+    queryset = database.models.InvoiceProduct.objects.totals().select_related('product', 'invoice')
+
+    # Handle ids filter
+    if ids_list:
+        lookup = field_lookup + '__in'
+        queryset = queryset.filter(**{lookup: ids_list})
+
+    # Handle date range filters
+    if month:
+        if not year:
+            raise ParseError("Provide year for month {0}".format(month))
+        queryset = queryset.filter(invoice__date_of_sale__month=month, invoice__date_of_sale__year=year)
+    elif year:
+        queryset = queryset.filter(invoice__date_of_sale__year=year)
+    elif date_start and date_end:
+        queryset = queryset.filter(invoice__date_of_sale__range=(date_start, date_end))
+    else:
+        raise ParseError("Must provide a month, year or custom date range")
+
+    # Check for case where field already exists in the queryset i.e. product field
+    if type_name != field_lookup:
+        queryset = queryset.annotate(**{type_name: F(field_lookup)})
+
+    # Do the query
+    queryset = queryset.annotate(customer=F('invoice__customer'),
+                                 month=ExtractMonth('invoice__date_of_sale'),
+                                 year=ExtractYear('invoice__date_of_sale'),
+                                 day=ExtractDay('invoice__date_of_sale'))\
+                       .annotate(product_sales=ExpressionWrapper(
+                           (F('quantity') - F('returned_quantity')) * F('sell_price'),
+                               output_field=models.DecimalField(max_digits=15, decimal_places=3)))\
+                       .annotate(product_profit=ExpressionWrapper(
+                           (F('quantity') - F('returned_quantity')) * (F('sell_price') - F('cost_price')),
+                               output_field=models.DecimalField(max_digits=15, decimal_places=3)))\
+                       .annotate(_sales=Sum("product_sales"))\
+                       .annotate(_profit=Sum("product_profit"))\
+                       .values(*group_by_params)\
+                       .annotate(sales=F('_sales'), profit=F('_profit'),
+                                 units=Sum(F('quantity') - F('returned_quantity')))\
+                       .order_by(*group_by_params)
+
+    return queryset
+
+
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = database.models.Customer.objects.all()
     serializer_class = CustomerSerializer
@@ -69,129 +139,139 @@ class CreditPaymentsViewSet(viewsets.ModelViewSet):
     filterset_fields = ('invoice',)
 
 
-class SalesProductsViewSet(viewsets.ModelViewSet):
-    serializer_class = SalesProductsSerializer
+class SalesTotalViewSet(viewsets.ModelViewSet):
+    serializer_class = SalesTotalSerializer
     http_method_names = ('get')
-
-    def get_object(self, queryset=None):
-        if self.request.query_params.get("id"):
-            if queryset is None:
-                queryset = self.get_queryset()
-
-            return queryset.aggregate(units=Sum('quantity'), sales=Sum('_sales'), profit=Sum('_profit'))
-        else:
-            return super(SalesProductsViewSet, self).get_object()
 
     def get_queryset(self):
         year = self.request.query_params.get("year")
         month = self.request.query_params.get("month")
-        products = self.request.query_params.get("id")
         group_by = self.request.query_params.get("group_by")
         date_end = self.request.query_params.get("date_end")
         date_start = self.request.query_params.get("date_start")
-
-        # Format id param into list
-        product_ids = products.split(',') if products else []
 
         # Format group_by param into list
         group_by_params = group_by.split(',') if group_by else []
 
         # Validate group_by params
-        if group_by_params and \
-           any(param not in ["product", "customer", "day", "month", "year"] for param in group_by_params):
-            raise ParseError("Can only group by product, customer, day, month or year")
-        if "customer" in group_by_params and not product_ids:
-            raise ParseError("Provide product ID to group by customers")
         if "day" in group_by_params and "month" not in group_by_params and not month:
             raise ParseError("Must group by both day and month when filtering by year or custom dates")
         if "month" in group_by_params and year and month:
             raise ParseError("Can not group by month when filtering by month")
 
         # Initial queryset
-        queryset = database.models.InvoiceProduct.objects.totals().select_related('invoice')
-
-        # Handle product filter
-        if product_ids:
-            queryset = queryset.filter(product__in=product_ids)
+        queryset = database.models.Invoice.objects
 
         # Handle date range filters
         if month:
             if not year:
                 raise ParseError("Provide year for month {0}".format(month))
-            queryset = queryset.filter(invoice__date_of_sale__month=month, invoice__date_of_sale__year=year)
+            queryset = queryset.filter(date_of_sale__month=month, date_of_sale__year=year)
         elif year:
-            queryset = queryset.filter(invoice__date_of_sale__year=year)
+            queryset = queryset.filter(date_of_sale__year=year)
         elif date_start and date_end:
-            queryset = queryset.filter(invoice__date_of_sale__range=(date_start, date_end))
+            queryset = queryset.filter(date_of_sale__range=(date_start, date_end))
         else:
             raise ParseError("Must provide a month, year or custom date range")
 
-        # Do the query
-        queryset = queryset.annotate(credit=F('invoice__credit'), customer=F('invoice__customer'))\
-                           .annotate(month=ExtractMonth('invoice__date_of_sale'), year=ExtractYear('invoice__date_of_sale'),
-                                     day=ExtractDay('invoice__date_of_sale'))\
-                           .annotate(cratio=Coalesce(F('payments_total') / F('invoice_total'), 0.0))\
-                           .annotate(product_sales=ExpressionWrapper((F('quantity') - F('returned_quantity')) * F('sell_price'),
-                                                        output_field=models.DecimalField(max_digits=15, decimal_places=3)))\
-                           .annotate(product_profit=ExpressionWrapper((F('quantity') - F('returned_quantity')) * (F('sell_price') - F('cost_price')),
-                                                          output_field=models.DecimalField(max_digits=15, decimal_places=3)))\
-                           .annotate(_sales=Sum(Case(When(credit=True, then=F('product_sales') * F('cratio')), default='product_sales',
-                                                output_field=models.DecimalField(max_digits=15, decimal_places=3))))\
-                           .annotate(_profit=Sum(Case(When(credit=True, then=F('product_profit') * F('cratio')), default='product_profit',
-                                                output_field=models.DecimalField(max_digits=15, decimal_places=3))))\
-                           .values(*group_by_params)\
-                           .annotate(sales=F('_sales'), profit=F('_profit'), units=Sum(F('quantity') - F('returned_quantity')))\
-                           .order_by(*group_by_params)
+        queryset = queryset.annotate(month=ExtractMonth('date_of_sale'), year=ExtractYear('date_of_sale'),
+                         day=ExtractDay('date_of_sale'))
+
+        if group_by_params:
+            queryset = queryset.values(*group_by_params)\
+                               .annotate(sales=Sum('invoice_total'), profit=Sum('profit_total'))\
+                               .order_by(*group_by_params)
+        else:
+            queryset = queryset.annotate(_sales=Sum('invoice_total'), _profit=Sum('profit_total'))\
+                               .values('_sales', '_profit')\
+                               .annotate(sales=F('_sales'), profit=F('_profit'))\
+                               .values('sales', 'profit')
 
         return queryset
 
 
-class SalesTotalViewSet(viewsets.ModelViewSet):
-    serializer_class = SalesTotalSerializer
-    filterset_class = SalesTotalFilter
+class SalesCustomersViewSet(viewsets.ModelViewSet):
+    serializer_class = SalesCustomersSerializer
     http_method_names = ('get')
 
     def get_queryset(self):
+        ids = self.request.query_params.get("id");
+        year = self.request.query_params.get("year")
+        month = self.request.query_params.get("month")
+        group_by = self.request.query_params.get("group_by")
+        date_end = self.request.query_params.get("date_end")
+        date_start = self.request.query_params.get("date_start")
+
+        # Format id param into list
+        ids_list = ids.split(',') if ids else []
+
+        # Format group_by param into list
+        group_by_params = group_by.split(',') if group_by else ["customer"]
+
+        # Validate group_by params
+        if group_by_params and \
+           any(param not in ["customer", "day", "month", "year"] for param in group_by_params):
+            raise ParseError("Can only group by customer, day, month or year")
+        if "day" in group_by_params and "month" not in group_by_params and not month:
+            raise ParseError("Must group by both day and month when filtering by year or custom dates")
+        if "month" in group_by_params and year and month:
+            raise ParseError("Can not group by month when filtering by month")
+
+        # Initial queryset
         queryset = database.models.Invoice.objects
-        queryset = queryset.annotate(month=ExtractMonth('date_of_sale'), year=ExtractYear('date_of_sale'))\
-                           .annotate(cratio=Coalesce(F('payments_total') / F('invoice_total'), 0.0))\
-                           .annotate(_sales=Sum(Case(When(credit=True, then=Coalesce(F('payments_total'), 0.0)),
-                                                          default='invoice_total')))\
-                           .annotate(_profit=Sum(Case(When(credit=True, then=F('profit_total') * F('cratio')),
-                                                           default='profit_total')))\
-                           .values('year', 'month')\
-                           .annotate(sales=F('_sales'), profit=F('_profit'))\
-                           .order_by('year', 'month')
+
+        # Handle ids filter
+        if ids_list:
+            queryset = queryset.filter(customer__in=ids_list)
+
+        # Handle date range filters
+        if month:
+            if not year:
+                raise ParseError("Provide year for month {0}".format(month))
+            queryset = queryset.filter(date_of_sale__month=month, date_of_sale__year=year)
+        elif year:
+            queryset = queryset.filter(date_of_sale__year=year)
+        elif date_start and date_end:
+            queryset = queryset.filter(date_of_sale__range=(date_start, date_end))
+        else:
+            raise ParseError("Must provide a month, year or custom date range")
+
+        queryset = queryset.annotate(month=ExtractMonth('date_of_sale'), year=ExtractYear('date_of_sale'),
+                                     day=ExtractDay('date_of_sale'))\
+                           .values(*group_by_params)\
+                           .annotate(sales=Sum('invoice_total'), profit=Sum('profit_total'))\
+                           .order_by(*group_by_params)
         return queryset
+
+
+class SalesProductsViewSet(viewsets.ModelViewSet):
+    serializer_class = SalesProductsSerializer
+    http_method_names = ('get')
+
+    def get_queryset(self):
+        return sales_per_type("product", "product", self.request.query_params)
 
 
 class SalesCategorySourceViewSet(viewsets.ModelViewSet):
     serializer_class = SalesCategorySourceSerializer
-    filterset_class = SalesCategorySourceFilter
     http_method_names = ('get')
 
     def get_queryset(self):
-        request_type = self.request.query_params.get("type");
+        type_name = self.request.query_params.get("type")
 
-        if request_type not in ["category", "source"]:
+        # Validate type_name
+        if type_name not in ["category", "source"]:
             raise ParseError("Type must be either 'category' or 'source'")
 
-        queryset = database.models.InvoiceProduct.objects.totals().select_related('product', 'invoice')\
-                        .annotate(credit=F('invoice__credit'), requested_type=F('product__' + request_type),
-                                  month=ExtractMonth(F('invoice__date_of_sale')), year=ExtractYear(F('invoice__date_of_sale')))\
-                        .annotate(cratio=Coalesce(F('payments_total') / F('invoice_total'), 0.0))\
-                        .annotate(product_sales=ExpressionWrapper((F('quantity') - F('returned_quantity')) * F('sell_price'),
-                                                                    output_field=models.DecimalField(max_digits=15, decimal_places=3)))\
-                        .annotate(product_profit=ExpressionWrapper((F('quantity') - F('returned_quantity')) * (F('sell_price') - F('cost_price')),
-                                                                    output_field=models.DecimalField(max_digits=15, decimal_places=3)))\
-                        .annotate(_sales=Sum(Case(When(credit=True, then=F('product_sales') * F('cratio')), default='product_sales',
-                                                output_field=models.DecimalField(max_digits=15, decimal_places=3))))\
-                        .annotate(_profit=Sum(Case(When(credit=True, then=F('product_profit') * F('cratio')), default='product_profit',
-                                                output_field=models.DecimalField(max_digits=15, decimal_places=3))))\
-                        .values('year', 'month', 'requested_type')\
-                        .annotate(sales=F('_sales'), profit=F('_profit'))\
-                        .order_by('year', 'month', 'requested_type')
-        return queryset
+        return sales_per_type("requested_type", "product__" + type_name, self.request.query_params)
+
+
+class SalesSuppliersViewSet(viewsets.ModelViewSet):
+    serializer_class = SalesSuppliersSerializer
+    http_method_names = ('get')
+
+    def get_queryset(self):
+        return sales_per_type("supplier", "product__supplier", self.request.query_params)
 
 
 class BackupDbViewSet(viewsets.ModelViewSet):
