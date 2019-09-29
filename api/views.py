@@ -175,7 +175,7 @@ class SalesTotalViewSet(viewsets.ModelViewSet):
             raise ParseError("Must provide a month, year or custom date range")
 
         queryset = queryset.annotate(month=ExtractMonth('date_of_sale'), year=ExtractYear('date_of_sale'),
-                         day=ExtractDay('date_of_sale'))
+                                     day=ExtractDay('date_of_sale'))
 
         if group_by_params:
             queryset = queryset.values(*group_by_params)\

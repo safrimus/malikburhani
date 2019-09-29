@@ -150,6 +150,7 @@ class InvoiceSerializer(QueryFieldsMixin, serializers.ModelSerializer):
 class SalesTotalSerializer(serializers.Serializer):
     year = serializers.IntegerField(read_only=True, required=False)
     month = serializers.IntegerField(read_only=True, required=False)
+    day = serializers.IntegerField(read_only=True, required=False)
     sales = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
     profit = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
 
