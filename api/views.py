@@ -19,7 +19,7 @@ from django_filters import rest_framework as filters
 from django.db import models, transaction
 from django.core import management
 from django.http import HttpResponse, HttpResponseBadRequest, FileResponse
-from django.db.models import Sum, ExpressionWrapper, F, Case, When
+from django.db.models import Sum, ExpressionWrapper, F, Case, When, Value
 from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear, ExtractDay
 
 import database.models
@@ -272,6 +272,55 @@ class SalesSuppliersViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return sales_per_type("supplier", "product__supplier", self.request.query_params)
+
+
+class CashflowTotalViewSet(viewsets.ModelViewSet):
+    serializer_class = CashflowTotalSerializer
+    http_method_names = ('get')
+
+    def get_queryset(self):
+        year = self.request.query_params.get("year")
+        month = self.request.query_params.get("month")
+        date_end = self.request.query_params.get("date_end")
+        date_start = self.request.query_params.get("date_start")
+
+        # Set group by field
+        if year and month:
+            group_by = "day"
+        else:
+            group_by = "month"
+
+        # Initial querysets
+        cash_invoices = database.models.Invoice.objects.filter(credit=False)
+        payments = database.models.InvoiceCreditPayment.objects
+
+        # Handle date range filters
+        if month:
+            if not year:
+                raise ParseError("Provide year for month {0}".format(month))
+            cash_invoices = cash_invoices.filter(date_of_sale__month=month, date_of_sale__year=year)
+            payments = payments.filter(date_of_payment__month=month, date_of_payment__year=year)
+        elif year:
+            cash_invoices = cash_invoices.filter(date_of_sale__year=year)
+            payments = payments.filter(date_of_payment__year=year)
+        elif date_start and date_end:
+            cash_invoices = cash_invoices.filter(date_of_sale__range=(date_start, date_end))
+            payments = payments.filter(date_of_payment__range=(date_start, date_end))
+        else:
+            raise ParseError("Must provide a month, year or custom date range")
+
+        cash_invoices = cash_invoices.annotate(month=ExtractMonth('date_of_sale'), year=ExtractYear('date_of_sale'),
+                                               day=ExtractDay('date_of_sale'),
+                                               type=Value("invoice", output_field=models.CharField()))\
+                                     .values(group_by, "type")\
+                                     .annotate(cash=Sum('invoice_total'))
+        payments = payments.annotate(month=ExtractMonth('date_of_payment'), year=ExtractYear('date_of_payment'),
+                                     day=ExtractDay('date_of_payment'),
+                                     type=Value("credit_payment", output_field=models.CharField()))\
+                           .values(group_by, "type")\
+                           .annotate(cash=Sum('payment'))
+
+        return cash_invoices.union(payments).order_by(group_by)
 
 
 class BackupDbViewSet(viewsets.ModelViewSet):

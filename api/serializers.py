@@ -200,3 +200,12 @@ class SalesCustomersSerializer(serializers.Serializer):
     year = serializers.IntegerField(read_only=True, required=False)
     month = serializers.IntegerField(read_only=True, required=False)
     day = serializers.IntegerField(read_only=True, required=False)
+
+
+# Cashflow total
+class CashflowTotalSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    year = serializers.IntegerField(read_only=True, required=False)
+    month = serializers.IntegerField(read_only=True, required=False)
+    day = serializers.IntegerField(read_only=True, required=False)
+    cash = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)

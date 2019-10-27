@@ -35,6 +35,7 @@ router.register(r'sales/category_source', views.SalesCategorySourceViewSet, 'Inv
 router.register(r'sales/products', views.SalesProductsViewSet, 'InvoiceProduct')
 router.register(r'sales/suppliers', views.SalesSuppliersViewSet, 'InvoiceProduct')
 router.register(r'sales/customers', views.SalesCustomersViewSet, 'InvoiceProduct')
+router.register(r'cashflow/total', views.CashflowTotalViewSet, 'Invoice')
 
 
 urlpatterns = [
