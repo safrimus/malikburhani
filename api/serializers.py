@@ -209,3 +209,10 @@ class CashflowTotalSerializer(serializers.Serializer):
     month = serializers.IntegerField(read_only=True, required=False)
     day = serializers.IntegerField(read_only=True, required=False)
     cash = serializers.DecimalField(max_digits=15, decimal_places=3, read_only=True)
+
+
+# Stock history
+class StockSoldTotalSerializer(serializers.Serializer):
+    product = serializers.IntegerField(read_only=True)
+    month = serializers.IntegerField(read_only=True)
+    quantity = serializers.IntegerField(read_only=True)

@@ -24,6 +24,9 @@ from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear, Extr
 
 import database.models
 
+# d = list(database.models.InvoiceProduct.objects.filter(product=389).values_list('invoice', flat=True))
+# database.models.InvoiceProduct.objects.filter(Q(invoice__in=d), ~Q(product=389)).values('product').annotate(count=Count('product')).filter(count__gt=5)
+
 
 def sales_per_type(type_name, field_lookup, params):
     ids = params.get("id");
@@ -321,6 +324,16 @@ class CashflowTotalViewSet(viewsets.ModelViewSet):
                            .annotate(cash=Sum('payment'))
 
         return cash_invoices.union(payments).order_by(group_by)
+
+
+class StockSoldTotalViewSet(viewsets.ModelViewSet):
+    serializer_class = StockSoldTotalSerializer
+    http_method_names = ('get')
+
+    def get_queryset(self):
+        return database.models.InvoiceProduct.objects.annotate(month=ExtractMonth('invoice__date_of_sale'))\
+                                                     .values('product', 'month')\
+                                                     .annotate(quantity=Sum(F('quantity') - F('returned_quantity')))
 
 
 class BackupDbViewSet(viewsets.ModelViewSet):

@@ -36,6 +36,7 @@ router.register(r'sales/products', views.SalesProductsViewSet, 'InvoiceProduct')
 router.register(r'sales/suppliers', views.SalesSuppliersViewSet, 'InvoiceProduct')
 router.register(r'sales/customers', views.SalesCustomersViewSet, 'InvoiceProduct')
 router.register(r'cashflow/total', views.CashflowTotalViewSet, 'Invoice')
+router.register(r'stock/sold/total', views.StockSoldTotalViewSet, 'InvoiceProduct')
 
 
 urlpatterns = [
