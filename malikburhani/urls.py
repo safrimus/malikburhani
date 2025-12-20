@@ -13,7 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url, include
+from django.urls import re_path, include
 from django.contrib import admin
 from rest_framework import routers
 from api import views
@@ -40,5 +40,5 @@ router.register(r'stock/sold/total', views.StockSoldTotalViewSet, 'InvoiceProduc
 
 
 urlpatterns = [
-	url(r'^api/v1/', include(router.urls)),
+	re_path(r'^api/v1/', include(router.urls)),
 ]
