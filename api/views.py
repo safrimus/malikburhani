@@ -16,7 +16,7 @@ from rest_framework.exceptions import ParseError
 from rest_framework.filters import OrderingFilter
 from django_filters import rest_framework as filters
 
-from django.db import models, transaction
+from django.db import models, transaction, connection
 from django.core import management
 from django.http import HttpResponse, HttpResponseBadRequest, FileResponse
 from django.db.models import Sum, ExpressionWrapper, F, Case, When, Value
@@ -337,93 +337,117 @@ class StockSoldTotalViewSet(viewsets.ModelViewSet):
 
 
 class BackupDbViewSet(viewsets.ModelViewSet):
-    http_method_names = ('get')
+    http_method_names = ('get',)
 
     def list(self, request):
-        response = tempfile.NamedTemporaryFile(delete=False)
-        archive = tarfile.open(fileobj=response, mode='w:gz')
-
-        fixtures = [('database.Category', 'categories.json'), ('database.Source', 'sources.json'),
-                    ('database.Supplier', 'suppliers.json'), ('database.Product', 'products.json'),
-                    ('database.Customer', 'customers.json'), ('database.Invoice', 'invoices.json'),
+        # Using delete=True would delete the file immediately on close, 
+        # so we manage cleanup manually to allow FileResponse to stream it.
+        tmp_file = tempfile.NamedTemporaryFile(delete=False)
+        
+        try:
+            # Context manager ensures tar footer and gzip stream are finalized
+            with tarfile.open(fileobj=tmp_file, mode='w:gz') as archive:
+                fixtures = [
+                    ('database.Category', 'categories.json'), 
+                    ('database.Source', 'sources.json'),
+                    ('database.Supplier', 'suppliers.json'), 
+                    ('database.Product', 'products.json'),
+                    ('database.Customer', 'customers.json'), 
+                    ('database.Invoice', 'invoices.json'),
                     ('database.InvoiceProduct', 'invoice_products.json'),
-                    ('database.InvoiceCreditPayment', 'payments.json')]
+                    ('database.InvoiceCreditPayment', 'payments.json')
+                ]
 
-        for fixture, filename in fixtures:
-            buf = io.StringIO()
-            management.call_command('dumpdata', fixture, indent=2, format='json', stdout=buf)
-            buf.seek(0)
-            tarinfo = tarfile.TarInfo(name=filename)
-            tarinfo.size = len(buf.getvalue())
-            archive.addfile(tarinfo, fileobj=io.BytesIO(buf.getvalue().encode('utf-8')))
-            buf.close()
+                for fixture, filename in fixtures:
+                    buf = io.StringIO()
+                    management.call_command('dumpdata', fixture, indent=2, format='json', stdout=buf)
+                    data = buf.getvalue().encode('utf-8')
+                    
+                    tarinfo = tarfile.TarInfo(name=filename)
+                    tarinfo.size = len(data)
+                    archive.addfile(tarinfo, fileobj=io.BytesIO(data))
+                    buf.close()
+            
+            # Close the underlying file handle so the OS flushes the buffer to disk
+            tmp_file.close()
 
-        archive.close()
-
-        today = datetime.datetime.now().strftime("%Y-%m-%d")
-        filename = "backup_{}.tar.gz".format(today)
-        return FileResponse(open(response.name, 'rb'), filename=filename, as_attachment=True)
-
+            today = datetime.datetime.now().strftime("%Y-%m-%d")
+            download_name = "backup_{}.tar.gz".format(today)
+            
+            # Re-open in read-binary mode for the response
+            return FileResponse(open(tmp_file.name, 'rb'), filename=download_name, as_attachment=True)
+            
+        except Exception as e:
+            # If something fails during creation, clean up the leaked temp file
+            if os.path.exists(tmp_file.name):
+                os.remove(tmp_file.name)
+            raise e
 
 class RestoreDbViewSet(viewsets.ModelViewSet):
-    http_method_names = ('post')
+    http_method_names = ('post',)
 
-    FIXTURES = ["customers.json", "categories.json", "sources.json", "suppliers.json", "products.json",
-                "invoices.json", "invoice_products.json", "payments.json"]
+    FIXTURES = [
+        "customers.json", "categories.json", "sources.json", "suppliers.json", 
+        "products.json", "invoices.json", "invoice_products.json", "payments.json"
+    ]
 
     def create(self, request):
-        file = request.FILES.get('file', None)
-
-        if not file:
+        file_obj = request.FILES.get('file', None)
+        if not file_obj:
             return HttpResponseBadRequest("No file received")
 
         try:
-            archive = tarfile.open(fileobj=file, mode='r')
-        except tarfile.ReadError as e:
-            return HttpResponseBadRequest("File is not a .tar.gz file")
+            # Open the tarball
+            archive = tarfile.open(fileobj=file_obj, mode='r:gz')
+            
+            # Pre-parse and validate all JSON files first to avoid 
+            # failing halfway through a database transaction
+            fixtures_data = []
+            for fixture_name in self.FIXTURES:
+                extracted = archive.extractfile(fixture_name)
+                if extracted:
+                    fixtures_data.append({
+                        'name': fixture_name,
+                        'data': json.loads(extracted.read().decode('utf-8'))
+                    })
+            archive.close()
+        except Exception as e:
+            return HttpResponseBadRequest(f"Archive processing error: {str(e)}")
 
-        # Verify we have all the right files
-        expected = self.FIXTURES.copy()
-        for fixture in archive.getnames():
-            if fixture in expected:
-                expected.remove(fixture)
-            else:
-                return HttpResponseBadRequest("Unexpected file '{0}'".format(fixture))
-        if expected:
-            return HttpResponseBadRequest("Missing files: {0}".format(','.join(expected)))
+        # Start the optimization: Everything inside one Database Transaction
+        try:
+            with transaction.atomic():
+                # 1. Clear the database
+                management.call_command('flush', verbosity=0, interactive=False)
 
-        # Convert binary files to json which also verifies if the files are valid json
-        fixtures_json = []
-        for fixture in self.FIXTURES:
-            file = archive.extractfile(fixture)
+                results = []
+                # 2. Process each file separately (Backwards Compatible)
+                for item in fixtures_data:
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                        json.dump(item['data'], f)
+                        temp_path = f.name
+                    
+                    try:
+                        output = io.StringIO()
+                        management.call_command('loaddata', temp_path, stdout=output)
+                        
+                        # Extract the count for the response log
+                        val = output.getvalue()
+                        count = val.split(' ')[1] if 'Installed' in val else "0"
+                        results.append(f"Restored {count} from {item['name']}")
+                    finally:
+                        if os.path.exists(temp_path):
+                            os.remove(temp_path)
 
-            try:
-                file_dict = json.loads(file.read().decode('utf-8'))
-            except json.decoder.JSONDecodeError:
-                return HttpResponseBadRequest("File {0} may be corrupted".format(fixture))
+                # 3. Optional but Recommended: Reset Postgres ID sequences
+                # This prevents "Duplicate Key" errors on next manual entry
+                # (Requires django-extensions or a custom management command)
+                management.call_command('sqlsequencereset', 'database') 
 
-            fixtures_json.append(file_dict)
+            return HttpResponse("\n".join(results))
 
-        # Flush db
-        management.call_command('flush', verbosity=0, interactive=False)
-
-        # Load data into db
-        response = ""
-        for fixture in fixtures_json:
-            temp = tempfile.NamedTemporaryFile(delete=False)
-            with open(temp.name, mode='w') as f:
-                json.dump(fixture, f)
-
-            output = io.StringIO()
-            os.rename(temp.name, "{0}.json".format(temp.name))
-            management.call_command('loaddata', temp.name, stdout=output)
-
-            objects_restored = output.getvalue().split(' ')[1]
-            fixture_name = fixture[0]["model"].split('.')[1].lower()
-            response += "\n" + "Restored {0} {1} items".format(objects_restored, fixture_name)
-
-        return HttpResponse(response)
-
+        except Exception as e:
+            return HttpResponse(f"Transaction failed: {str(e)}", status=500)
 
 class StockXlsViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post')
